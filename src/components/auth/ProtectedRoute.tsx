@@ -11,6 +11,7 @@ export const ProtectedRoute = ({ component: Component, requireAdmin = false }: P
   const { error, getAccessTokenSilently, isAuthenticated, isLoading, loginWithRedirect } = useAuth0();
   const navigate = useNavigate();
   const [isVerifying, setIsVerifying] = useState(true);
+  const [verificationError, setVerificationError] = useState<string | null>(null);
 
   // Handle Auth0 Login Redirect
   useEffect(() => {
@@ -36,7 +37,7 @@ export const ProtectedRoute = ({ component: Component, requireAdmin = false }: P
 
           if (!response.ok) {
             console.error("Backend returned error status:", response.status);
-            // DO NOT REDIRECT! It will cause an infinite loop.
+            setVerificationError(`Authentication failed with status ${response.status}. Please log in again.`);
             setIsVerifying(false);
             return;
           }
@@ -56,7 +57,7 @@ export const ProtectedRoute = ({ component: Component, requireAdmin = false }: P
           setIsVerifying(false);
         } catch (error) {
           console.error("Verification failed:", error);
-          // DO NOT REDIRECT!
+          setVerificationError("Unable to connect to the authentication server.");
           setIsVerifying(false);
         }
       }
@@ -89,6 +90,21 @@ export const ProtectedRoute = ({ component: Component, requireAdmin = false }: P
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <div className="text-muted-foreground animate-pulse">Loading your secure workspace...</div>
+      </div>
+    );
+  }
+
+  if (verificationError) {
+    return (
+      <div className="flex flex-col h-screen w-full items-center justify-center p-8 text-center">
+        <h2 className="text-xl font-bold text-destructive mb-2">Verification Failed</h2>
+        <p className="text-muted-foreground mb-6">{verificationError}</p>
+        <button 
+          onClick={() => loginWithRedirect({ authorizationParams: { prompt: "login" } })}
+          className="bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90"
+        >
+          Return to Login
+        </button>
       </div>
     );
   }
