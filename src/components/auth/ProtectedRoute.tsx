@@ -43,7 +43,7 @@ export const ProtectedRoute = ({ component: Component, requireAdmin = false }: P
           }
           
           if (user && user.email_verified === false) {
-            setVerificationError("Please verify your email address before accessing the platform.");
+            setVerificationError("Please verify your email address before accessing the platform. Don't forget to check your spam folder!");
             setIsVerifying(false);
             return;
           }
