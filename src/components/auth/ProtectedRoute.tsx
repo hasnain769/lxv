@@ -8,7 +8,7 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute = ({ component: Component, requireAdmin = false }: ProtectedRouteProps) => {
-  const { error, getAccessTokenSilently, isAuthenticated, isLoading, loginWithRedirect } = useAuth0();
+  const { error, getAccessTokenSilently, isAuthenticated, isLoading, loginWithRedirect, user } = useAuth0();
   const navigate = useNavigate();
   const [isVerifying, setIsVerifying] = useState(true);
   const [verificationError, setVerificationError] = useState<string | null>(null);
@@ -42,6 +42,12 @@ export const ProtectedRoute = ({ component: Component, requireAdmin = false }: P
             return;
           }
           
+          if (user && user.email_verified === false) {
+            setVerificationError("Please verify your email address before accessing the platform.");
+            setIsVerifying(false);
+            return;
+          }
+          
           const dbUser = await response.json();
 
           if (dbUser.toc_accepted === false) {
@@ -64,7 +70,7 @@ export const ProtectedRoute = ({ component: Component, requireAdmin = false }: P
     };
 
     verifyUser();
-  }, [isLoading, isAuthenticated, getAccessTokenSilently, navigate, requireAdmin, loginWithRedirect]);
+  }, [isLoading, isAuthenticated, getAccessTokenSilently, navigate, requireAdmin, loginWithRedirect, user]);
 
   if (error) {
     return (
