@@ -109,10 +109,10 @@ export const ProtectedRoute = ({ component: Component, requireAdmin = false }: P
           System Diagnostic: Auth0 reported email_verified={String(user?.email_verified)} for {user?.email}
         </p>
         <button 
-          onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
+          onClick={() => loginWithRedirect({ authorizationParams: { prompt: "login" } })}
           className="bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90"
         >
-          Sign Out & Log In Again
+          Force Refresh Verification Status
         </button>
       </div>
     );
