@@ -267,8 +267,8 @@ const ModuleDetail = () => {
               ) : (
                 <div className="space-y-4">
                   {sessionsData?.chats?.map((session: any) => (
-                    <div className="bg-background border border-border rounded-xl p-4 flex items-center justify-between" key={session.id}>
-                      <div className="flex-1 min-w-0 mr-4">
+                    <div className="bg-background border border-border rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4" key={session.id}>
+                      <div className="flex-1 min-w-0">
                         <p className="font-semibold text-foreground truncate">
                           {session.last_message_preview || "No messages yet"}
                         </p>
@@ -375,8 +375,8 @@ const ModuleDetail = () => {
           />
           
           {/* Drawer */}
-          <div className="fixed right-0 top-0 h-full w-96 bg-card border-l border-border shadow-xl z-50 flex flex-col">
-            <div className="p-6 flex flex-col h-full">
+          <div className="fixed right-0 top-0 h-full w-[85vw] sm:w-96 bg-card border-l border-border shadow-xl z-50 flex flex-col">
+            <div className="p-4 sm:p-6 flex flex-col h-full">
               {/* Header */}
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">

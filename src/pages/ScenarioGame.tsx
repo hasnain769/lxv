@@ -517,16 +517,16 @@ const ScenarioGame = () => {
         <div className={`flex-1 flex flex-col transition-all duration-300 ${showProfessor ? 'md:mr-96' : ''}`}>
           {/* Sticky Header */}
           <header className="sticky top-0 z-10 bg-card border-b border-border">
-            <div className="px-6 py-4 flex items-center gap-4">
+            <div className="px-4 sm:px-6 py-4 flex items-center gap-4">
               <Link
                 to={`/library/${id}?tab=previous-sessions`}
-                className="text-muted-foreground hover:text-foreground transition-colors"
+                className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
               >
                 <X className="w-5 h-5" />
               </Link>
-              <div>
-                <h1 className="font-bold text-foreground">Series A Investment - Email Thread</h1>
-                <p className="text-sm text-muted-foreground">Shareholder Agreement Negotiation</p>
+              <div className="min-w-0">
+                <h1 className="font-bold text-foreground text-sm sm:text-base truncate">Series A Investment - Email Thread</h1>
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">Shareholder Agreement Negotiation</p>
               </div>
             </div>
             {/* Action buttons row */}
@@ -581,17 +581,17 @@ const ScenarioGame = () => {
               <div key={email.id} className={`border border-border rounded-xl overflow-hidden ${email.senderInitials === "D" ? "bg-slate-100 dark:bg-slate-800/50" : "bg-card"}`}>
                 {/* Email Header with distinct background */}
                 <div className="bg-muted/50 border-b border-border px-5 py-4">
-                  <div className="flex items-start justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 font-semibold text-sm">
+                      <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 font-semibold text-sm shrink-0">
                         {email.senderInitials}
                       </div>
-                      <div>
-                        <p className="font-semibold text-foreground">{email.senderName}</p>
-                        <p className="text-sm text-muted-foreground">{email.senderEmail}</p>
+                      <div className="min-w-0">
+                        <p className="font-semibold text-foreground truncate">{email.senderName}</p>
+                        <p className="text-sm text-muted-foreground truncate">{email.senderEmail}</p>
                       </div>
                     </div>
-                    <p className="text-sm text-muted-foreground">{email.timestamp}</p>
+                    <p className="text-sm text-muted-foreground shrink-0">{email.timestamp}</p>
                   </div>
                 </div>
 
@@ -691,16 +691,16 @@ const ScenarioGame = () => {
                   <h3 className="font-semibold text-foreground text-sm">Compose Response</h3>
                   <p className="text-sm text-muted-foreground">From: Danny</p>
                 </div>
-                <div className="flex gap-3 items-end">
+                <div className="flex flex-col sm:flex-row gap-3 items-end">
                   <Textarea
                     ref={textareaRef}
                     placeholder="Type your email response here..."
                     value={response}
                     onChange={(e) => setResponse(e.target.value)}
-                    className="min-h-[44px] max-h-[200px] resize-none flex-1"
+                    className="min-h-[44px] max-h-[200px] resize-none w-full"
                     rows={1}
                   />
-                  <Button onClick={handleSendEmail} className="gap-2 shrink-0">
+                  <Button onClick={handleSendEmail} className="gap-2 shrink-0 w-full sm:w-auto">
                     <Send className="w-4 h-4" />
                     Send Email
                   </Button>

@@ -147,8 +147,8 @@ const ModuleLibrary = () => {
           </header>
 
           {/* Search and Filters */}
-          <div className="flex gap-4 mb-8 animate-fade-in" style={{ animationDelay: "50ms" }}>
-            <div className="relative flex-1 max-w-md">
+          <div className="flex flex-col md:flex-row gap-4 mb-8 animate-fade-in" style={{ animationDelay: "50ms" }}>
+            <div className="relative flex-1 md:max-w-md w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
                 placeholder="Search modules..."
@@ -156,7 +156,7 @@ const ModuleLibrary = () => {
               />
             </div>
             <Select defaultValue="all-categories">
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-full md:w-[180px]">
                 <SelectValue placeholder="All Categories" />
               </SelectTrigger>
               <SelectContent>
@@ -169,7 +169,7 @@ const ModuleLibrary = () => {
               </SelectContent>
             </Select>
             <Select defaultValue="all-modules">
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-full md:w-[180px]">
                 <SelectValue placeholder="All Modules" />
               </SelectTrigger>
               <SelectContent>

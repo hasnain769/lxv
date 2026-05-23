@@ -34,9 +34,9 @@ interface NavItemProps {
 const NavItem = ({ icon, label, href, active, comingSoon }: NavItemProps) => (
   comingSoon ? (
     <div className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 opacity-60 cursor-not-allowed text-foreground/70">
-      <Lock className="w-5 h-5" />
-      <span className="flex-1">{label}</span>
-      <Badge variant="secondary" className="text-[10px] uppercase px-1.5 py-0">Coming Soon</Badge>
+      <Lock className="w-5 h-5 shrink-0" />
+      <span className="flex-1 truncate">{label}</span>
+      <Badge variant="secondary" className="text-[10px] uppercase px-1.5 py-0 shrink-0 whitespace-nowrap">Coming Soon</Badge>
     </div>
   ) : (
     <Link
@@ -49,7 +49,7 @@ const NavItem = ({ icon, label, href, active, comingSoon }: NavItemProps) => (
       )}
     >
       {icon}
-      {label}
+      <span className="truncate">{label}</span>
     </Link>
   )
 );
@@ -65,9 +65,9 @@ interface SubNavItemProps {
 const SubNavItem = ({ icon, label, href, active, comingSoon }: SubNavItemProps) => (
   comingSoon ? (
     <div className="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm transition-all duration-200 opacity-60 cursor-not-allowed text-foreground/70">
-      <Lock className="w-4 h-4" />
+      <Lock className="w-4 h-4 shrink-0" />
       <span className="flex-1 truncate">{label}</span>
-      <Badge variant="secondary" className="text-[9px] uppercase px-1 py-0">Soon</Badge>
+      <Badge variant="secondary" className="text-[9px] uppercase px-1 py-0 shrink-0 whitespace-nowrap">Soon</Badge>
     </div>
   ) : (
     <Link
@@ -80,7 +80,7 @@ const SubNavItem = ({ icon, label, href, active, comingSoon }: SubNavItemProps) 
       )}
     >
       {icon}
-      {label}
+      <span className="truncate">{label}</span>
     </Link>
   )
 );
@@ -101,9 +101,9 @@ import { Menu } from "lucide-react";
 const SidebarContent = ({ isModuleOpen, setIsModuleOpen, location, currentSubPath, moduleTitle, moduleId, isUnlocked }: any) => (
   <div className="h-full w-full bg-card flex flex-col">
       {/* Logo */}
-      <div className="p-6 border-b border-border">
+      <div className="p-6 pr-12 border-b border-border">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shrink-0">
             <GraduationCap className="w-5 h-5 text-primary-foreground" />
           </div>
           <div>
@@ -238,7 +238,7 @@ const Sidebar = () => {
               <Menu className="w-6 h-6" />
             </button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-64 p-0 border-r border-border">
+          <SheetContent side="left" className="w-[85vw] max-w-[320px] p-0 border-r border-border">
             <SidebarContent {...sidebarProps} />
           </SheetContent>
         </Sheet>
