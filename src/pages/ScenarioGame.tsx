@@ -518,12 +518,12 @@ const ScenarioGame = () => {
     }));
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="min-h-screen flex">
+    <div className="h-[100dvh] bg-background flex flex-col overflow-hidden">
+      <div className="flex-1 flex overflow-hidden">
         {/* Main Content */}
-        <div className={`flex-1 flex flex-col transition-all duration-300 ${showProfessor ? 'md:mr-96' : ''}`}>
-          {/* Sticky Header */}
-          <header className="sticky top-0 z-10 bg-card border-b border-border">
+        <div className={`flex-1 flex flex-col h-full transition-all duration-300 ${showProfessor ? 'md:mr-96' : ''}`}>
+          {/* Header */}
+          <header className="shrink-0 bg-card border-b border-border">
             <div className="px-4 sm:px-6 py-4 flex items-center gap-4">
               <Link
                 to={`/library/${id}?tab=previous-sessions`}
@@ -574,7 +574,7 @@ const ScenarioGame = () => {
           </header>
 
           {/* Scenario Overview */}
-          <div className="bg-muted/30 border-b border-border px-6 py-4">
+          <div className="bg-muted/30 border-b border-border px-6 py-4 shrink-0">
             <h2 className="font-semibold text-foreground mb-1">Scenario Overview</h2>
             <p className="text-muted-foreground text-sm">
               You are <span className="text-foreground font-medium">Danny</span>, advising{" "}
@@ -678,8 +678,8 @@ const ScenarioGame = () => {
             <div ref={emailThreadEndRef} />
           </div>
 
-          {/* Sticky Compose Response */}
-          <div className="sticky bottom-0 bg-card border-t border-border p-4">
+          {/* Compose Response */}
+          <div className="shrink-0 bg-card border-t border-border p-4">
             {activeChat?.state?.toLowerCase() === 'ended' ? (
               <div className="flex flex-col items-center justify-center p-4">
                 <p className="text-muted-foreground mb-4">This scenario has concluded. Your performance has been evaluated.</p>
@@ -764,8 +764,12 @@ const ScenarioGame = () => {
               ))}
               {isTyping && (
                 <div className="flex justify-start">
-                  <div className="bg-muted rounded-xl px-4 py-2.5">
-                    <p className="text-sm text-muted-foreground">Professor is typing...</p>
+                  <div className="bg-muted rounded-xl px-4 py-3">
+                    <div className="flex gap-2 items-center h-4">
+                      <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    </div>
                   </div>
                 </div>
               )}
@@ -773,7 +777,7 @@ const ScenarioGame = () => {
             </div>
 
             {/* Professor Input */}
-            <div className="border-t border-border p-4">
+            <div className="shrink-0 border-t border-border p-4">
               <Textarea
                 placeholder="Ask the professor for guidance..."
                 value={professorQuery}
