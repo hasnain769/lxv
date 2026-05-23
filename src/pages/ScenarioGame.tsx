@@ -590,7 +590,7 @@ const ScenarioGame = () => {
           </div>
 
           {/* Email Thread - Natively Scrollable */}
-          <div className="p-4 md:p-6 space-y-4 pb-24">
+          <div className="p-4 md:p-6 space-y-4">
             {emails.map((email) => (
               <div key={email.id} className={`border border-border rounded-xl overflow-hidden ${email.senderInitials === "D" ? "bg-slate-100 dark:bg-slate-800/50" : "bg-card"}`}>
                 {/* Email Header with distinct background */}
@@ -686,7 +686,7 @@ const ScenarioGame = () => {
           </div>
 
           {/* Compose Response */}
-          <div className="sticky bottom-0 z-20 bg-card border-t border-border p-4 shadow-[0_-4px_10px_-4px_rgba(0,0,0,0.1)]">
+          <div className="bg-card border-t border-border p-4 shadow-[0_-4px_10px_-4px_rgba(0,0,0,0.1)]">
             {activeChat?.state?.toLowerCase() === 'ended' ? (
               <div className="flex flex-col items-center justify-center p-4">
                 <p className="text-muted-foreground mb-4">This scenario has concluded. Your performance has been evaluated.</p>
@@ -713,6 +713,11 @@ const ScenarioGame = () => {
                     onChange={(e) => setResponse(e.target.value)}
                     className="min-h-[44px] max-h-[200px] resize-none w-full"
                     rows={1}
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="sentences"
+                    spellCheck="false"
+                    data-form-type="other"
                   />
                   <Button onClick={handleSendEmail} className="gap-2 shrink-0 w-full sm:w-auto">
                     <Send className="w-4 h-4" />
