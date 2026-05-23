@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
-import { FileText, ShieldAlert, Lock, AlertTriangle } from "lucide-react";
+import { FileText } from "lucide-react";
 
 export default function TermsOfConditions() {
   const { getAccessTokenSilently } = useAuth0();
@@ -167,126 +167,85 @@ export default function TermsOfConditions() {
   );
 
   return (
-    <div className="flex min-h-screen w-full flex-col md:flex-row bg-muted/30">
-      <div className="hidden md:flex w-1/3 bg-slate-950 text-white flex-col p-10 justify-between relative overflow-hidden shadow-2xl">
-        <div className="relative z-10">
-          <div className="flex items-center gap-2 mb-12">
-            <ShieldAlert className="w-8 h-8 text-blue-500" />
-            <span className="text-2xl font-bold tracking-tight">LXVerse</span>
-          </div>
-          <h2 className="text-3xl font-bold mb-6 leading-tight">Secure Early Access Environment</h2>
-          <p className="text-slate-400 text-lg">
-            This platform contains proprietary simulation logic and confidential scenarios. Your access is restricted and monitored.
-          </p>
-        </div>
-        
-        <div className="relative z-10 space-y-4">
-          <div className="flex items-center gap-3 text-slate-300 bg-slate-900 border border-slate-800 p-4 rounded-lg">
-            <Lock className="w-5 h-5 text-blue-400" />
-            <span className="text-sm font-medium">End-to-End Auditable Activity</span>
-          </div>
-          <div className="flex items-center gap-3 text-slate-300 bg-slate-900 border border-slate-800 p-4 rounded-lg">
-            <AlertTriangle className="w-5 h-5 text-yellow-500" />
-            <span className="text-sm font-medium">Strict No-Sharing Policy Active</span>
-          </div>
-        </div>
-        
-        {/* Decorative background elements */}
-        <div className="absolute -top-24 -right-24 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl pointer-events-none"></div>
-      </div>
+    <div className="flex h-screen w-full items-center justify-center bg-muted/40 p-4">
+      <div className="w-full max-w-lg rounded-xl border bg-card p-8 shadow-sm">
+        <h1 className="mb-4 text-2xl font-bold tracking-tight">Terms and Conditions</h1>
+        <p className="mb-6 text-sm text-muted-foreground">
+          Welcome to the Early Access program for the Legal Training Platform. As an early tester, you must agree to our confidentiality and beta testing terms.
+        </p>
 
-      <div className="flex-1 flex items-center justify-center p-6 md:p-12">
-        <div className="w-full max-w-xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold tracking-tight mb-2">Terms & Conditions</h1>
-            <p className="text-muted-foreground">
-              Please review and accept our confidentiality requirements before accessing the platform.
-            </p>
-          </div>
+        <div className="mb-6 flex items-center justify-between p-4 rounded-lg border bg-muted/30">
+          <span className="text-sm font-medium">Review the full terms before accepting:</span>
+          <Dialog open={termsOpen} onOpenChange={setTermsOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-2">
+                <FileText className="w-4 h-4" />
+                View Full Terms
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-3xl max-h-[85vh] flex flex-col p-0 overflow-hidden bg-background">
+              <DialogHeader className="px-6 py-4 border-b border-border bg-slate-50 dark:bg-slate-900/50">
+                <DialogTitle className="flex items-center gap-2 text-xl">
+                  <FileText className="w-5 h-5 text-blue-600" />
+                  Early Access & Confidentiality Terms
+                </DialogTitle>
+                <DialogDescription>
+                  Please read these terms carefully before proceeding.
+                </DialogDescription>
+              </DialogHeader>
 
-          <div className="space-y-4 mb-8">
-            <div className="flex items-start space-x-4 p-4 rounded-lg border bg-card hover:bg-muted/30 transition-colors">
-              <Checkbox 
-                id="terms" 
-                checked={acceptedTerms} 
-                onCheckedChange={(checked) => setAcceptedTerms(checked as boolean)} 
-                className="mt-1 w-5 h-5"
-              />
-              <div className="grid gap-1.5 leading-none flex-1">
-                <label
-                  htmlFor="terms"
-                  className="text-sm font-medium cursor-pointer"
-                >
-                  I agree to the{" "}
-                  <Dialog open={termsOpen} onOpenChange={setTermsOpen}>
-                    <DialogTrigger asChild>
-                      <span className="text-primary hover:underline font-semibold" onClick={(e) => {
-                        e.preventDefault();
-                        setTermsOpen(true);
-                      }}>
-                        Demo Access & Confidentiality Terms
-                      </span>
-                    </DialogTrigger>
-                    <DialogContent className="sm:max-w-3xl max-h-[85vh] flex flex-col p-0 overflow-hidden bg-background">
-                      <DialogHeader className="px-6 py-4 border-b border-border bg-slate-50 dark:bg-slate-900/50">
-                        <DialogTitle className="flex items-center gap-2 text-xl">
-                          <FileText className="w-5 h-5 text-blue-600" />
-                          Early Access & Confidentiality Terms
-                        </DialogTitle>
-                        <DialogDescription>
-                          Please read these terms carefully before proceeding.
-                        </DialogDescription>
-                      </DialogHeader>
-
-                      <div className="flex-1 overflow-y-auto p-6 bg-background">
-                        {termsContent}
-                      </div>
-
-                      <DialogFooter className="px-6 py-4 border-t border-border bg-slate-50 dark:bg-slate-900/50 flex justify-end">
-                        <Button variant="default" onClick={() => {
-                          setTermsOpen(false);
-                          setAcceptedTerms(true);
-                        }}>
-                          I have read the terms
-                        </Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>.
-                </label>
-                <p className="text-sm text-muted-foreground leading-snug mt-1">
-                  You must read and agree to all the terms outlined in the document.
-                </p>
+              <div className="flex-1 overflow-y-auto p-6 bg-background">
+                {termsContent}
               </div>
-            </div>
 
-            <div className="flex items-start space-x-4 p-4 rounded-lg border bg-card hover:bg-muted/30 transition-colors">
-              <Checkbox 
-                id="confidentiality" 
-                checked={acceptedConfidentiality} 
-                onCheckedChange={(checked) => setAcceptedConfidentiality(checked as boolean)} 
-                className="mt-1 w-5 h-5"
-              />
-              <div className="grid gap-1.5 leading-none flex-1">
-                <label
-                  htmlFor="confidentiality"
-                  className="text-sm font-medium leading-snug cursor-pointer"
-                >
-                  I understand that the demo is confidential and may not be shared, copied, recorded, screenshotted, reverse engineered, or uploaded to external AI tools.
-                </label>
-              </div>
-            </div>
+              <DialogFooter className="px-6 py-4 border-t border-border bg-slate-50 dark:bg-slate-900/50 flex justify-end">
+                <Button variant="default" onClick={() => setTermsOpen(false)}>
+                  Close
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        <div className="mb-6 space-y-4">
+          <div className="flex items-start space-x-3">
+            <Checkbox 
+              id="terms" 
+              checked={acceptedTerms} 
+              onCheckedChange={(checked) => setAcceptedTerms(checked as boolean)} 
+              className="mt-0.5"
+            />
+            <label
+              htmlFor="terms"
+              className="text-sm font-medium leading-tight cursor-pointer select-none"
+            >
+              I agree to the Demo Access & Confidentiality Terms.
+            </label>
           </div>
 
-          <Button 
-            size="lg"
-            className="w-full text-base h-12 shadow-md" 
-            onClick={handleAccept} 
-            disabled={!acceptedTerms || !acceptedConfidentiality || submitting}
-          >
-            {submitting ? "Processing Access..." : "Accept and Continue"}
-          </Button>
+          <div className="flex items-start space-x-3">
+            <Checkbox 
+              id="confidentiality" 
+              checked={acceptedConfidentiality} 
+              onCheckedChange={(checked) => setAcceptedConfidentiality(checked as boolean)} 
+              className="mt-0.5"
+            />
+            <label
+              htmlFor="confidentiality"
+              className="text-sm font-medium leading-snug cursor-pointer select-none text-muted-foreground"
+            >
+              I understand that the demo is confidential and may not be shared, copied, recorded, screenshotted, reverse engineered, or uploaded to external AI tools.
+            </label>
+          </div>
         </div>
+
+        <Button 
+          className="w-full" 
+          onClick={handleAccept} 
+          disabled={!acceptedTerms || !acceptedConfidentiality || submitting}
+        >
+          {submitting ? "Processing..." : "Accept and Continue"}
+        </Button>
       </div>
     </div>
   );
