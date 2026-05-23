@@ -514,7 +514,7 @@ const ScenarioGame = () => {
     <div className="min-h-screen bg-background">
       <div className="min-h-screen flex">
         {/* Main Content */}
-        <div className={`flex-1 flex flex-col transition-all duration-300 ${showProfessor ? 'mr-96' : ''}`}>
+        <div className={`flex-1 flex flex-col transition-all duration-300 ${showProfessor ? 'md:mr-96' : ''}`}>
           {/* Sticky Header */}
           <header className="sticky top-0 z-10 bg-card border-b border-border">
             <div className="px-6 py-4 flex items-center gap-4">
@@ -530,7 +530,7 @@ const ScenarioGame = () => {
               </div>
             </div>
             {/* Action buttons row */}
-            <div className="px-6 pb-4 flex items-center gap-3">
+            <div className="px-4 md:px-6 pb-4 flex flex-wrap items-center gap-2 md:gap-3">
               <Button
                 variant="outline"
                 size="sm"
@@ -712,7 +712,7 @@ const ScenarioGame = () => {
 
         {/* Professor Guide Sidebar */}
         {showProfessor && (
-          <div className="fixed right-0 top-0 h-full w-96 bg-card border-l border-border flex flex-col z-20">
+          <div className="fixed right-0 top-0 h-full w-full md:w-96 bg-card border-l border-border flex flex-col z-50">
             {/* Professor Header */}
             <div className="border-b border-border p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">

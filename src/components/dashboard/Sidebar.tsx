@@ -94,28 +94,12 @@ const moduleSubItems = [
   { id: "speakers", title: "Speakers & Creators", icon: Users, alwaysUnlocked: false, isSeparatePage: true, comingSoon: true },
 ];
 
-const Sidebar = () => {
-  const location = useLocation();
-  const { isModuleUnlocked } = useSubscription();
-  const isInModule = location.pathname.startsWith("/library/") && location.pathname !== "/library";
-  const currentSubPath = location.pathname.split("/").slice(3).join("/");
-  
-  // Extract module ID from path
-  const pathParts = location.pathname.split("/");
-  const moduleId = pathParts[2] || "";
-  const moduleTitle = moduleId.replace(/-/g, " ").toUpperCase();
-  const isUnlocked = isModuleUnlocked(moduleId);
-  
-  const [isModuleOpen, setIsModuleOpen] = useState(isInModule);
-  
-  useEffect(() => {
-    if (isInModule) {
-      setIsModuleOpen(true);
-    }
-  }, [isInModule]);
-  
-  return (
-    <aside className="fixed left-0 top-0 h-screen w-64 bg-card border-r border-border flex flex-col">
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Menu } from "lucide-react";
+
+// SidebarContent extracts the inner content so it can be reused in Sheet and Desktop
+const SidebarContent = ({ isModuleOpen, setIsModuleOpen, location, currentSubPath, moduleTitle, moduleId, isUnlocked }: any) => (
+  <div className="h-full w-full bg-card flex flex-col">
       {/* Logo */}
       <div className="p-6 border-b border-border">
         <div className="flex items-center gap-3">
@@ -149,7 +133,7 @@ const Sidebar = () => {
                 <BookOpen className="w-5 h-5" />
                 Module Library
               </Link>
-              {isInModule && (
+              {(isModuleOpen || location.pathname.startsWith("/library/")) && (
                 <CollapsibleTrigger asChild>
                   <button className="p-1 hover:bg-white/10 rounded">
                     <ChevronDown 
@@ -163,7 +147,7 @@ const Sidebar = () => {
               )}
             </div>
             
-            {isInModule && (
+            {(isModuleOpen || location.pathname.startsWith("/library/")) && (
               <CollapsibleContent className="mt-1 ml-2 space-y-0.5">
                 {/* Module Title */}
                 <div className="px-4 py-2 text-xs font-semibold text-primary tracking-wide">
@@ -213,7 +197,58 @@ const Sidebar = () => {
           </div>
         </div>
       </div>
-    </aside>
+  </div>
+);
+
+const Sidebar = () => {
+  const location = useLocation();
+  const { isModuleUnlocked } = useSubscription();
+  const isInModule = location.pathname.startsWith("/library/") && location.pathname !== "/library";
+  const currentSubPath = location.pathname.split("/").slice(3).join("/");
+  
+  // Extract module ID from path
+  const pathParts = location.pathname.split("/");
+  const moduleId = pathParts[2] || "";
+  const moduleTitle = moduleId.replace(/-/g, " ").toUpperCase();
+  const isUnlocked = isModuleUnlocked(moduleId);
+  
+  const [isModuleOpen, setIsModuleOpen] = useState(isInModule);
+  
+  useEffect(() => {
+    if (isInModule) {
+      setIsModuleOpen(true);
+    }
+  }, [isInModule]);
+
+  const sidebarProps = { isModuleOpen, setIsModuleOpen, location, currentSubPath, moduleTitle, moduleId, isUnlocked };
+  
+  return (
+    <>
+      {/* Mobile Top Navigation */}
+      <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-card border-b border-border z-50 flex items-center justify-between px-4">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+            <GraduationCap className="w-4 h-4 text-primary-foreground" />
+          </div>
+          <h1 className="text-base font-bold text-foreground">LXVerse</h1>
+        </div>
+        <Sheet>
+          <SheetTrigger asChild>
+            <button className="p-2 -mr-2 text-foreground/70 hover:text-foreground">
+              <Menu className="w-6 h-6" />
+            </button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-64 p-0 border-r border-border">
+            <SidebarContent {...sidebarProps} />
+          </SheetContent>
+        </Sheet>
+      </div>
+
+      {/* Desktop Fixed Sidebar */}
+      <aside className="hidden md:flex fixed left-0 top-0 h-screen w-64 bg-card border-r border-border flex-col z-40">
+        <SidebarContent {...sidebarProps} />
+      </aside>
+    </>
   );
 };
 

@@ -151,7 +151,7 @@ const ModuleDetail = () => {
     <div className="min-h-screen bg-white">
       <Sidebar />
 
-      <main className="ml-64 min-h-screen">
+      <main className="md:ml-64 pt-16 md:pt-0 min-h-screen">
         {loadingModule ? (
           <div className="flex justify-center p-12">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -161,7 +161,7 @@ const ModuleDetail = () => {
             Module not found.
           </div>
         ) : (
-        <div className="p-8 max-w-4xl mx-auto">
+        <div className="p-4 md:p-8 max-w-4xl mx-auto">
           {/* Back link */}
           <Link
             to="/library"

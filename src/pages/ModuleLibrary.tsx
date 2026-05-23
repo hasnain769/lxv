@@ -136,8 +136,8 @@ const ModuleLibrary = () => {
     <div className="min-h-screen bg-background">
       <Sidebar />
 
-      <main className="ml-64 min-h-screen">
-        <div className="p-8">
+      <main className="md:ml-64 pt-16 md:pt-0 min-h-screen">
+        <div className="p-4 md:p-8">
           {/* Header */}
           <header className="mb-8 animate-fade-in">
             <h1 className="text-3xl font-bold text-foreground mb-2">Module Library</h1>
