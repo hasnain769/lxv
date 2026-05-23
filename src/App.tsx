@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import { Auth0ProviderWithNavigate } from "@/components/auth/Auth0ProviderWithNavigate";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
@@ -38,7 +38,7 @@ const App = () => (
               <Route path="/terms" element={<TermsOfConditions />} />
               
               {/* Protected Routes */}
-              <Route path="/" element={<ProtectedRoute component={Index} />} />
+              <Route path="/" element={<Navigate to="/library" replace />} />
               <Route path="/my-modules" element={<ProtectedRoute component={MyModules} />} />
               <Route path="/settings" element={<ProtectedRoute component={Settings} />} />
               <Route path="/certification" element={<ProtectedRoute component={Certification} />} />
