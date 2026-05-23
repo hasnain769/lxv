@@ -518,7 +518,7 @@ const ScenarioGame = () => {
     }));
 
   return (
-    <div className="h-[100dvh] bg-background flex flex-col overflow-hidden">
+    <div className="fixed inset-0 bg-background flex flex-col overflow-hidden">
       <div className="flex-1 flex overflow-hidden">
         {/* Main Content */}
         <div className={`flex-1 flex flex-col h-full transition-all duration-300 ${showProfessor ? 'md:mr-96' : ''}`}>
@@ -541,32 +541,32 @@ const ScenarioGame = () => {
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-2"
+                className="gap-1.5 h-8 text-xs px-2.5 md:h-9 md:text-sm md:px-3 md:gap-2"
                 onClick={() => setShowProfessor(true)}
               >
-                <MessageSquare className="w-4 h-4" />
+                <MessageSquare className="w-3.5 h-3.5 md:w-4 md:h-4" />
                 Ask AI Professor
               </Button>
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-2 bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hover:text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800 dark:hover:bg-blue-900/50"
+                className="gap-1.5 h-8 text-xs px-2.5 md:h-9 md:text-sm md:px-3 md:gap-2 bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hover:text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800 dark:hover:bg-blue-900/50"
                 onClick={() => setRcsModalOpen(true)}
               >
-                <Database className="w-4 h-4" />
+                <Database className="w-3.5 h-3.5 md:w-4 md:h-4" />
                 RCS Access
               </Button>
               <Button
                 variant="outline"
                 size="sm"
-                className="gap-2 opacity-50"
+                className="gap-1.5 h-8 text-xs px-2.5 md:h-9 md:text-sm md:px-3 md:gap-2 opacity-50 hidden md:flex"
                 disabled
               >
-                <Users className="w-4 h-4" />
+                <Users className="w-3.5 h-3.5 md:w-4 md:h-4" />
                 Ask Human Expert (Coming Soon)
               </Button>
               {activeChat?.state?.toLowerCase() !== 'ended' && (
-                <Button variant="destructive" size="sm" onClick={() => setEndScenarioOpen(true)}>
+                <Button variant="destructive" size="sm" className="h-8 text-xs px-2.5 md:h-9 md:text-sm md:px-3" onClick={() => setEndScenarioOpen(true)}>
                   End Scenario
                 </Button>
               )}
@@ -574,9 +574,9 @@ const ScenarioGame = () => {
           </header>
 
           {/* Scenario Overview */}
-          <div className="bg-muted/30 border-b border-border px-6 py-4 shrink-0">
-            <h2 className="font-semibold text-foreground mb-1">Scenario Overview</h2>
-            <p className="text-muted-foreground text-sm">
+          <div className="bg-muted/30 border-b border-border px-4 md:px-6 py-3 md:py-4 shrink-0">
+            <h2 className="font-semibold text-foreground mb-1 text-sm md:text-base">Scenario Overview</h2>
+            <p className="text-muted-foreground text-xs md:text-sm">
               You are <span className="text-foreground font-medium">Danny</span>, advising{" "}
               <span className="text-foreground font-medium">Marc Feider</span>. Review the messages below and respond when ready.
             </p>
