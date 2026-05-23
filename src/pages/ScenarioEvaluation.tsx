@@ -1,7 +1,7 @@
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth0 } from "@auth0/auth0-react";
-import { Award, Target, TrendingUp, TrendingDown, CheckCircle2, XCircle, Trophy, Medal, Zap, Home, RotateCcw, Users, Lightbulb, Loader2, MessageSquare } from "lucide-react";
+import { Award, Target, TrendingUp, TrendingDown, CheckCircle2, XCircle, Trophy, Medal, Zap, Home, RotateCcw, Users, Lightbulb, Loader2, MessageSquare, X } from "lucide-react";
 
 import Sidebar from "@/components/dashboard/Sidebar";
 import { Button } from "@/components/ui/button";
@@ -158,20 +158,28 @@ const ScenarioEvaluation = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Sidebar />
-
-      <main className="md:ml-64 pt-20 p-4 md:p-8">
+      <main className="p-4 md:p-8 min-h-screen">
         <div className="max-w-5xl mx-auto">
           {/* Header */}
-          <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-md -mt-8 pt-8 pb-4 mb-8 border-b border-border/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Award className="w-5 h-5 text-primary" />
-                </div>
-                Performance Scorecard
-              </h1>
-              <p className="text-muted-foreground mt-1">{chatData?.scenario_name || "Legal Negotiation"}</p>
+          <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-md pt-4 pb-4 mb-8 border-b border-border/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-start md:items-center gap-4">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="shrink-0 text-muted-foreground hover:text-foreground md:mt-0 mt-1"
+                onClick={() => navigate(`/library/${id}?tab=previous-sessions`)}
+              >
+                <X className="w-5 h-5" />
+              </Button>
+              <div>
+                <h1 className="text-2xl md:text-3xl font-bold text-foreground flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <Award className="w-5 h-5 text-primary" />
+                  </div>
+                  Performance Scorecard
+                </h1>
+                <p className="text-muted-foreground mt-1 ml-13 md:ml-0">{chatData?.scenario_name || "Legal Negotiation"}</p>
+              </div>
             </div>
             
             {/* Action Buttons */}
