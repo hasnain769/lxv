@@ -105,6 +105,9 @@ export const ProtectedRoute = ({ component: Component, requireAdmin = false }: P
       <div className="flex flex-col h-screen w-full items-center justify-center p-8 text-center">
         <h2 className="text-xl font-bold text-destructive mb-2">Verification Failed</h2>
         <p className="text-muted-foreground mb-6">{verificationError}</p>
+        <p className="text-xs text-slate-400 mb-6 font-mono">
+          System Diagnostic: Auth0 reported email_verified={String(user?.email_verified)} for {user?.email}
+        </p>
         <button 
           onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
           className="bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90"
