@@ -97,8 +97,23 @@ const moduleSubItems = [
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
 
+import { useAuth0 } from "@auth0/auth0-react";
+
 // SidebarContent extracts the inner content so it can be reused in Sheet and Desktop
-const SidebarContent = ({ isModuleOpen, setIsModuleOpen, location, currentSubPath, moduleTitle, moduleId, isUnlocked }: any) => (
+const SidebarContent = ({ isModuleOpen, setIsModuleOpen, location, currentSubPath, moduleTitle, moduleId, isUnlocked }: any) => {
+  const { user } = useAuth0();
+  
+  const name = user?.name || user?.nickname || "User";
+  const email = user?.email || "";
+  const initials = name
+    .split(' ')
+    .map((n: string) => n[0])
+    .join('')
+    .toUpperCase()
+    .substring(0, 2);
+  const picture = user?.picture;
+
+  return (
   <div className="h-full w-full bg-card flex flex-col">
       {/* Logo */}
       <div className="p-6 pr-12 border-b border-border">
@@ -188,17 +203,22 @@ const SidebarContent = ({ isModuleOpen, setIsModuleOpen, location, currentSubPat
       {/* User section */}
       <div className="p-4 border-t border-border">
         <div className="flex items-center gap-3 px-4 py-3">
-          <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-sm font-semibold text-primary-foreground">
-            JD
+          <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-sm font-semibold text-primary-foreground overflow-hidden shrink-0">
+            {picture && !picture.includes('cdn.auth0.com/avatars') ? (
+              <img src={picture} alt={name} className="w-full h-full object-cover" />
+            ) : (
+              initials
+            )}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-foreground truncate">John Doe</p>
-            <p className="text-xs text-muted-foreground">john.doe@firm.com</p>
+            <p className="text-sm font-medium text-foreground truncate">{name}</p>
+            <p className="text-xs text-muted-foreground truncate">{email}</p>
           </div>
         </div>
       </div>
   </div>
-);
+  );
+};
 
 const Sidebar = () => {
   const location = useLocation();

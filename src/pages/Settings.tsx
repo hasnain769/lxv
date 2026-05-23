@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAuth0 } from "@auth0/auth0-react";
 
 const SettingsCard = ({ 
   icon, 
@@ -56,6 +57,12 @@ const Settings = () => {
   const [sessionReminders, setSessionReminders] = useState(true);
   const [progressUpdates, setProgressUpdates] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
+  const { user } = useAuth0();
+
+  const nameParts = (user?.name || user?.nickname || "").split(" ");
+  const firstName = nameParts[0] || "";
+  const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "";
+  const email = user?.email || "";
 
   return (
     <div className="min-h-screen bg-background">
@@ -82,16 +89,16 @@ const Settings = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm font-medium text-foreground mb-2 block">First Name</label>
-                    <Input placeholder="John" defaultValue="John" />
+                    <Input placeholder="First Name" defaultValue={firstName} />
                   </div>
                   <div>
                     <label className="text-sm font-medium text-foreground mb-2 block">Last Name</label>
-                    <Input placeholder="Doe" defaultValue="Doe" />
+                    <Input placeholder="Last Name" defaultValue={lastName} />
                   </div>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-foreground mb-2 block">Email</label>
-                  <Input type="email" placeholder="john@example.com" defaultValue="john@example.com" />
+                  <Input type="email" placeholder="Email address" defaultValue={email} />
                 </div>
                 <div>
                   <label className="text-sm font-medium text-foreground mb-2 block">Profession</label>
