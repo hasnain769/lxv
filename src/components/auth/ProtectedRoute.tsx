@@ -17,7 +17,7 @@ export const ProtectedRoute = ({ component: Component, requireAdmin = false }: P
   useEffect(() => {
     // Stop the loop! If there is an error from Auth0 (like Service Not Found), DO NOT redirect.
     if (!isLoading && !isAuthenticated && !error) {
-      loginWithRedirect();
+      loginWithRedirect({ appState: { returnTo: window.location.pathname } });
     }
   }, [isLoading, isAuthenticated, error, loginWithRedirect]);
 

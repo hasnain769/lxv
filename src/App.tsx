@@ -25,6 +25,20 @@ import TermsOfConditions from "./pages/TermsOfConditions";
 
 import ErrorBoundary from "@/components/ErrorBoundary";
 
+import { useAuth0 } from "@auth0/auth0-react";
+
+const RootRedirect = () => {
+  const { isLoading } = useAuth0();
+  if (isLoading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center">
+        <div className="text-muted-foreground animate-pulse">Authenticating...</div>
+      </div>
+    );
+  }
+  return <Navigate to="/library" replace />;
+};
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -41,7 +55,7 @@ const App = () => (
                 <Route path="/terms" element={<TermsOfConditions />} />
                 
                 {/* Protected Routes */}
-                <Route path="/" element={<Navigate to="/library" replace />} />
+                <Route path="/" element={<RootRedirect />} />
                 <Route path="/my-modules" element={<ProtectedRoute component={MyModules} />} />
                 <Route path="/settings" element={<ProtectedRoute component={Settings} />} />
                 <Route path="/certification" element={<ProtectedRoute component={Certification} />} />
