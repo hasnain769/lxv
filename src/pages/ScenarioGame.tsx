@@ -525,8 +525,8 @@ const ScenarioGame = () => {
     }));
 
   return (
-    <div className="flex flex-col min-h-[100dvh] bg-background relative overflow-x-hidden max-w-[100vw]">
-      <div className="flex-1 flex w-full max-w-[100vw]">
+    <div className="flex flex-col min-h-[100dvh] bg-background relative">
+      <div className="flex-1 flex w-full">
         {/* Main Content */}
         <div className={`flex-1 flex flex-col w-full transition-all duration-300 ${showProfessor ? 'md:mr-96' : ''}`}>
           {/* Header */}
