@@ -373,6 +373,7 @@ const ScenarioGame = () => {
       const messageContent = response;
       setResponse("");
       setIsSendingEmail(true);
+      setIsMarcTyping(true);
 
       setLocalGameMessages((prev) => [
         ...prev,
@@ -393,11 +394,16 @@ const ScenarioGame = () => {
         const decoder = new TextDecoder("utf-8");
         let done = false;
         let assistantMessageId = "temp-assistant";
+        let firstChunk = true;
 
         while (!done) {
           const { value, done: readerDone } = await reader!.read();
           done = readerDone;
           if (value) {
+            if (firstChunk) {
+              setIsMarcTyping(false);
+              firstChunk = false;
+            }
             const chunk = decoder.decode(value, { stream: true });
             const lines = chunk.split("\n");
             for (const line of lines) {
@@ -424,6 +430,7 @@ const ScenarioGame = () => {
         }
       } finally {
         setIsSendingEmail(false);
+        setIsMarcTyping(false);
         queryClient.invalidateQueries({ queryKey: ["active-chat", scenarioId] });
       }
     }
@@ -518,7 +525,7 @@ const ScenarioGame = () => {
     }));
 
   return (
-    <div className="flex flex-col min-h-screen bg-background relative">
+    <div className="flex flex-col min-h-[100dvh] bg-background relative">
       <div className="flex-1 flex w-full">
         {/* Main Content */}
         <div className={`flex-1 flex flex-col w-full transition-all duration-300 ${showProfessor ? 'md:mr-96' : ''}`}>
