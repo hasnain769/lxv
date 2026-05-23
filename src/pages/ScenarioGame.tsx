@@ -270,6 +270,13 @@ const ScenarioGame = () => {
     emailThreadEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [localGameMessages, isMarcTyping]);
 
+  // Auto-navigate to scorecard when state becomes ENDED
+  useEffect(() => {
+    if (activeChat?.state?.toLowerCase() === 'ended') {
+      navigate(`/library/${id}/scenario/${scenarioId}/evaluation?chatId=${urlChatId}`);
+    }
+  }, [activeChat?.state, navigate, id, scenarioId, urlChatId]);
+
   // Fetch or Create Chat
   // Fetch or Create Chat
   const { data: activeChat, isLoading: loadingChat } = useQuery({

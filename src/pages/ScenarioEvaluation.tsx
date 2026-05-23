@@ -160,7 +160,7 @@ const ScenarioEvaluation = () => {
     <div className="min-h-screen bg-background">
       <Sidebar />
 
-      <main className="ml-64 p-8">
+      <main className="md:ml-64 pt-20 p-4 md:p-8">
         <div className="max-w-5xl mx-auto">
           {/* Header */}
           <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-md -mt-8 pt-8 pb-4 mb-8 border-b border-border/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
