@@ -50,13 +50,6 @@ export default function TermsOfConditions() {
 
   const termsContent = (
     <div className="prose prose-sm dark:prose-invert max-w-none text-slate-800 dark:text-slate-200">
-      <div className="bg-muted p-4 rounded-lg mb-6 text-xs text-muted-foreground">
-        <p><strong>Version:</strong> 1.01</p>
-        <p><strong>Date:</strong> 21 May 2026</p>
-        <p><strong>Company:</strong> LXplorer S.à r.l.-S, Avenue de la Faiencerie 46, 1510 Luxembourg, RCS number: B304830</p>
-        <p><strong>Product:</strong> LXSkills & LXVerse</p>
-        <p><strong>Contact:</strong> info@lxplorer.com</p>
-      </div>
 
       <h3 className="text-base font-semibold mt-4 mb-2">1. Purpose of the Early Access</h3>
       <p>We are giving you access to a confidential early access demo version of our AI-driven legal simulation platform.</p>
@@ -163,6 +156,14 @@ export default function TermsOfConditions() {
       <h3 className="text-base font-semibold mt-6 mb-2">17. Contact</h3>
       <p>Questions or notices concerning these Terms should be sent to:</p>
       <p>Email: <a href="mailto:info@lxplorer.com" className="text-primary hover:underline">info@lxplorer.com</a></p>
+
+      <div className="bg-muted p-4 rounded-lg mt-8 text-xs text-muted-foreground">
+        <p><strong>Version:</strong> 1.01</p>
+        <p><strong>Date:</strong> 21 May 2026</p>
+        <p><strong>Company:</strong> LXplorer S.à r.l.-S, Avenue de la Faiencerie 46, 1510 Luxembourg, RCS number: B304830</p>
+        <p><strong>Product:</strong> LXSkills & LXVerse</p>
+        <p><strong>Contact:</strong> info@lxplorer.com</p>
+      </div>
     </div>
   );
 
