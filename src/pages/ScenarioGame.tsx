@@ -512,9 +512,7 @@ const ScenarioGame = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Sidebar />
-
-      <div className="ml-64 min-h-screen flex">
+      <div className="min-h-screen flex">
         {/* Main Content */}
         <div className={`flex-1 flex flex-col transition-all duration-300 ${showProfessor ? 'mr-96' : ''}`}>
           {/* Sticky Header */}

@@ -41,10 +41,10 @@ import { Loader2 } from "lucide-react";
 
 const sections = [
   { id: "introduction", title: "Introduction", icon: FileText, locked: false },
+  { id: "scenarios", title: "Practice Scenario", icon: Play, locked: false },
+  { id: "previous-sessions", title: "Previous Sessions", icon: History, locked: false },
   { id: "reading", title: "Reading Material", icon: BookOpen, locked: true },
   { id: "media", title: "Media Library", icon: Video, locked: true },
-  { id: "scenarios", title: "Practice Scenarios", icon: Play, locked: false },
-  { id: "previous-sessions", title: "Previous Sessions", icon: History, locked: false },
   { id: "sessions", title: "Live Sessions", icon: Video, locked: true },
   { id: "speakers", title: "Speakers & Creators", icon: Users, locked: true },
 ];

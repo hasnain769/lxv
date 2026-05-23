@@ -24,7 +24,7 @@ export default function TermsOfConditions() {
     setSubmitting(true);
     try {
       const token = await getAccessTokenSilently();
-      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8001";
       
       const response = await fetch(`${apiUrl}/auth/accept-toc`, {
         method: "POST",

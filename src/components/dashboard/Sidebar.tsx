@@ -86,11 +86,11 @@ const SubNavItem = ({ icon, label, href, active, comingSoon }: SubNavItemProps) 
 );
 
 const moduleSubItems = [
-  { id: "introduction", title: "Introduction", icon: FileText, alwaysUnlocked: true, isSeparatePage: false, comingSoon: true },
+  { id: "introduction", title: "Introduction", icon: FileText, alwaysUnlocked: true, isSeparatePage: false, comingSoon: false },
+  { id: "scenarios", title: "Practice Scenario", icon: Play, alwaysUnlocked: true, isSeparatePage: false, comingSoon: false },
+  { id: "sessions", title: "Previous Sessions", icon: Video, alwaysUnlocked: true, isSeparatePage: false, comingSoon: false },
   { id: "reading", title: "Reading Material", icon: BookOpen, alwaysUnlocked: false, isSeparatePage: false, comingSoon: true },
   { id: "media", title: "Media Library", icon: Video, alwaysUnlocked: false, isSeparatePage: false, comingSoon: true },
-  { id: "scenarios", title: "Practice Scenarios", icon: Play, alwaysUnlocked: true, isSeparatePage: false, comingSoon: false },
-  { id: "sessions", title: "Previous Sessions", icon: Video, alwaysUnlocked: true, isSeparatePage: false, comingSoon: false },
   { id: "speakers", title: "Speakers & Creators", icon: Users, alwaysUnlocked: false, isSeparatePage: true, comingSoon: true },
 ];
 
@@ -133,7 +133,7 @@ const Sidebar = () => {
       <nav className="flex-1 p-4 overflow-y-auto">
         <div className="space-y-1">
           <NavItem icon={<LayoutDashboard className="w-5 h-5" />} label="Dashboard" href="/" active={location.pathname === "/"} comingSoon />
-          <NavItem icon={<Star className="w-5 h-5" />} label="My Modules" href="/my-modules" active={location.pathname === "/my-modules"} />
+          <NavItem icon={<Star className="w-5 h-5" />} label="My Modules" href="/my-modules" active={location.pathname === "/my-modules"} comingSoon />
           
           {/* Module Library with collapsible submenu */}
           <Collapsible open={isModuleOpen} onOpenChange={setIsModuleOpen}>
