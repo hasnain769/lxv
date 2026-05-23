@@ -682,7 +682,7 @@ const ScenarioGame = () => {
                 </div>
               </div>
             )}
-            <div ref={emailThreadEndRef} />
+            <div ref={emailThreadEndRef} className="scroll-m-32 h-1" />
           </div>
 
           {/* Compose Response */}
