@@ -194,7 +194,7 @@ const ScenarioEvaluation = () => {
               </Button>
               <Button 
                 className="gap-2"
-                onClick={() => navigate(`/library/${id}/scenario/${scenarioId}/play?chatId=${chatId}`)}
+                onClick={() => navigate(`/library/${id}/scenario/${scenarioId}/play?chatId=${chatId}&view=chat`)}
               >
                 <MessageSquare className="w-4 h-4" />
                 Back to Chat

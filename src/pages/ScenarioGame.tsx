@@ -144,6 +144,7 @@ const ScenarioGame = () => {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const urlChatId = searchParams.get("chatId");
+  const viewParam = searchParams.get("view");
   const { getAccessTokenSilently } = useAuth0();
   const queryClient = useQueryClient();
 
@@ -290,10 +291,10 @@ const ScenarioGame = () => {
 
   // Auto-navigate to scorecard when state becomes ENDED
   useEffect(() => {
-    if (activeChat?.state?.toLowerCase() === 'ended') {
+    if (activeChat?.state?.toLowerCase() === 'ended' && viewParam !== 'chat') {
       navigate(`/library/${id}/scenario/${scenarioId}/evaluation?chatId=${urlChatId}`);
     }
-  }, [activeChat?.state, navigate, id, scenarioId, urlChatId]);
+  }, [activeChat?.state, navigate, id, scenarioId, urlChatId, viewParam]);
 
   // Handle Chat Creation separately
   useEffect(() => {
