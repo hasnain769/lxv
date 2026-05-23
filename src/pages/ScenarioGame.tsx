@@ -518,12 +518,12 @@ const ScenarioGame = () => {
     }));
 
   return (
-    <div className="fixed inset-0 bg-background flex flex-col overflow-hidden">
-      <div className="flex-1 flex overflow-hidden">
+    <div className="flex flex-col min-h-screen bg-background relative">
+      <div className="flex-1 flex w-full">
         {/* Main Content */}
-        <div className={`flex-1 flex flex-col h-full transition-all duration-300 ${showProfessor ? 'md:mr-96' : ''}`}>
+        <div className={`flex-1 flex flex-col w-full transition-all duration-300 ${showProfessor ? 'md:mr-96' : ''}`}>
           {/* Header */}
-          <header className="shrink-0 bg-card border-b border-border">
+          <header className="sticky top-0 z-20 bg-card border-b border-border">
             <div className="px-4 sm:px-6 py-4 flex items-center gap-4">
               <Link
                 to={`/library/${id}?tab=previous-sessions`}
@@ -574,7 +574,7 @@ const ScenarioGame = () => {
           </header>
 
           {/* Scenario Overview */}
-          <div className="bg-muted/30 border-b border-border px-4 md:px-6 py-3 md:py-4 shrink-0">
+          <div className="bg-muted/30 border-b border-border px-4 md:px-6 py-3 md:py-4">
             <h2 className="font-semibold text-foreground mb-1 text-sm md:text-base">Scenario Overview</h2>
             <p className="text-muted-foreground text-xs md:text-sm">
               You are <span className="text-foreground font-medium">Danny</span>, advising{" "}
@@ -582,8 +582,8 @@ const ScenarioGame = () => {
             </p>
           </div>
 
-          {/* Email Thread - Scrollable */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-4">
+          {/* Email Thread - Natively Scrollable */}
+          <div className="p-4 md:p-6 space-y-4 pb-24">
             {emails.map((email) => (
               <div key={email.id} className={`border border-border rounded-xl overflow-hidden ${email.senderInitials === "D" ? "bg-slate-100 dark:bg-slate-800/50" : "bg-card"}`}>
                 {/* Email Header with distinct background */}
@@ -679,7 +679,7 @@ const ScenarioGame = () => {
           </div>
 
           {/* Compose Response */}
-          <div className="shrink-0 bg-card border-t border-border p-4">
+          <div className="sticky bottom-0 z-20 bg-card border-t border-border p-4 shadow-[0_-4px_10px_-4px_rgba(0,0,0,0.1)]">
             {activeChat?.state?.toLowerCase() === 'ended' ? (
               <div className="flex flex-col items-center justify-center p-4">
                 <p className="text-muted-foreground mb-4">This scenario has concluded. Your performance has been evaluated.</p>
@@ -719,7 +719,7 @@ const ScenarioGame = () => {
 
         {/* Professor Guide Sidebar */}
         {showProfessor && (
-          <div className="fixed right-0 top-0 h-full w-full md:w-96 bg-card border-l border-border flex flex-col z-50">
+          <div className="fixed right-0 top-0 h-[100dvh] w-full md:w-96 bg-card border-l border-border flex flex-col z-50">
             {/* Professor Header */}
             <div className="border-b border-border p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
