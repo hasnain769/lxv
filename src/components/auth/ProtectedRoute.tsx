@@ -8,7 +8,7 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute = ({ component: Component, requireAdmin = false }: ProtectedRouteProps) => {
-  const { error, getAccessTokenSilently, isAuthenticated, isLoading, loginWithRedirect, user } = useAuth0();
+  const { error, getAccessTokenSilently, isAuthenticated, isLoading, loginWithRedirect, logout, user } = useAuth0();
   const navigate = useNavigate();
   const [isVerifying, setIsVerifying] = useState(true);
   const [verificationError, setVerificationError] = useState<string | null>(null);
@@ -106,10 +106,10 @@ export const ProtectedRoute = ({ component: Component, requireAdmin = false }: P
         <h2 className="text-xl font-bold text-destructive mb-2">Verification Failed</h2>
         <p className="text-muted-foreground mb-6">{verificationError}</p>
         <button 
-          onClick={() => loginWithRedirect({ authorizationParams: { prompt: "login" } })}
+          onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
           className="bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90"
         >
-          Return to Login
+          Sign Out & Log In Again
         </button>
       </div>
     );
