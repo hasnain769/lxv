@@ -15,7 +15,7 @@ import {
   LogOut
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import {
   Collapsible,
@@ -109,6 +109,7 @@ import {
 // SidebarContent extracts the inner content so it can be reused in Sheet and Desktop
 const SidebarContent = ({ isModuleOpen, setIsModuleOpen, location, currentSubPath, moduleTitle, moduleId, isUnlocked }: any) => {
   const { user, logout } = useAuth0();
+  const navigate = useNavigate();
 
   const name = user?.name || user?.nickname || "User";
   const email = user?.email || "";
@@ -226,6 +227,15 @@ const SidebarContent = ({ isModuleOpen, setIsModuleOpen, location, currentSubPat
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-[200px]">
+            <DropdownMenuItem 
+              className="cursor-pointer"
+              onClick={() => {
+                navigate("/settings");
+              }}
+            >
+              <Settings className="w-4 h-4 mr-2" />
+              Settings
+            </DropdownMenuItem>
             <DropdownMenuItem 
               className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer"
               onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}

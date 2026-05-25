@@ -53,16 +53,58 @@ const SettingsRow = ({
 );
 
 const Settings = () => {
-  const [emailNotifications, setEmailNotifications] = useState(true);
-  const [sessionReminders, setSessionReminders] = useState(true);
-  const [progressUpdates, setProgressUpdates] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
-  const { user } = useAuth0();
+  const { user, isLoading: isAuth0Loading } = useAuth0();
+  const [resetting, setResetting] = useState(false);
+  const [message, setMessage] = useState<{ text: string, type: "success" | "error" } | null>(null);
 
-  const nameParts = (user?.name || user?.nickname || "").split(" ");
-  const firstName = nameParts[0] || "";
-  const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "";
-  const email = user?.email || "";
+  if (isAuth0Loading || !user) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-pulse">Loading settings...</div>
+      </div>
+    );
+  }
+
+  const handlePasswordReset = async () => {
+    if (user.sub && !user.sub.startsWith("auth0|")) {
+      setMessage({
+        text: "You are logged in via a social provider (e.g. Google). Please change your password directly with your provider.",
+        type: "error"
+      });
+      return;
+    }
+
+    setResetting(true);
+    setMessage(null);
+
+    try {
+      const response = await fetch(`https://${import.meta.env.VITE_AUTH0_DOMAIN}/dbconnections/change_password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          client_id: import.meta.env.VITE_AUTH0_CLIENT_ID,
+          email: user.email,
+          connection: "Username-Password-Authentication"
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+
+      setMessage({
+        text: `A password reset link has been sent to ${user.email}. Please check your inbox.`,
+        type: "success"
+      });
+    } catch (e: any) {
+      setMessage({
+        text: `Failed to request password reset: ${e.message}`,
+        type: "error"
+      });
+    } finally {
+      setResetting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -85,177 +127,30 @@ const Settings = () => {
               title="Profile"
               description="Manage your personal information"
             >
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-foreground mb-2 block">First Name</label>
-                    <Input placeholder="First Name" defaultValue={firstName} />
+              <div className="space-y-6 flex flex-col items-center">
+                {user.picture ? (
+                  <img src={user.picture} alt={user.name} className="w-24 h-24 rounded-full border-4 border-background shadow-md" />
+                ) : (
+                  <div className="w-24 h-24 rounded-full bg-primary flex items-center justify-center text-3xl font-bold text-primary-foreground border-4 border-background shadow-md">
+                    {user.name?.charAt(0) || user.email?.charAt(0) || "U"}
                   </div>
-                  <div>
-                    <label className="text-sm font-medium text-foreground mb-2 block">Last Name</label>
-                    <Input placeholder="Last Name" defaultValue={lastName} />
-                  </div>
+                )}
+                
+                <div className="text-center w-full">
+                  <h3 className="text-xl font-bold text-foreground mb-1">{user.name || "Anonymous User"}</h3>
+                  <p className="text-muted-foreground">{user.email}</p>
                 </div>
-                <div>
-                  <label className="text-sm font-medium text-foreground mb-2 block">Email</label>
-                  <Input type="email" placeholder="Email address" defaultValue={email} />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-foreground mb-2 block">Profession</label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select your profession" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectGroup>
-                        <SelectLabel>Student / Graduate</SelectLabel>
-                        <SelectItem value="student">Student</SelectItem>
-                        <SelectItem value="graduate">Graduate</SelectItem>
-                      </SelectGroup>
-                      <SelectGroup>
-                        <SelectLabel>Legal Professional</SelectLabel>
-                        <SelectItem value="junior-lawyer">Junior Lawyer</SelectItem>
-                        <SelectItem value="senior-lawyer">Senior Lawyer</SelectItem>
-                        <SelectItem value="counsel">Counsel</SelectItem>
-                        <SelectItem value="partner">Partner</SelectItem>
-                        <SelectItem value="in-house-counsel">In-House Counsel</SelectItem>
-                        <SelectItem value="general-counsel">General Counsel</SelectItem>
-                      </SelectGroup>
-                      <SelectGroup>
-                        <SelectLabel>Business / Investment</SelectLabel>
-                        <SelectItem value="entrepreneur">Entrepreneur</SelectItem>
-                        <SelectItem value="founder">Founder / Co-Founder</SelectItem>
-                        <SelectItem value="ceo">CEO / Executive</SelectItem>
-                        <SelectItem value="board-member">Board Member</SelectItem>
-                        <SelectItem value="investor">Investor</SelectItem>
-                        <SelectItem value="vc">Venture Capitalist</SelectItem>
-                        <SelectItem value="angel">Angel Investor</SelectItem>
-                      </SelectGroup>
-                      <SelectGroup>
-                        <SelectLabel>Other</SelectLabel>
-                        <SelectItem value="consultant">Consultant</SelectItem>
-                        <SelectItem value="academic">Academic / Professor</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button>Save Changes</Button>
-              </div>
-            </SettingsCard>
-
-            {/* Notifications Section */}
-            <SettingsCard
-              icon={<Bell className="w-6 h-6" />}
-              title="Notifications"
-              description="Configure how you receive notifications"
-            >
-              <div>
-                <SettingsRow 
-                  label="Email Notifications" 
-                  description="Receive updates about your courses via email"
-                >
-                  <Switch checked={emailNotifications} onCheckedChange={setEmailNotifications} />
-                </SettingsRow>
-                <SettingsRow 
-                  label="Session Reminders" 
-                  description="Get reminded before live sessions start"
-                >
-                  <Switch checked={sessionReminders} onCheckedChange={setSessionReminders} />
-                </SettingsRow>
-                <SettingsRow 
-                  label="Progress Updates" 
-                  description="Weekly summary of your learning progress"
-                >
-                  <Switch checked={progressUpdates} onCheckedChange={setProgressUpdates} />
-                </SettingsRow>
-              </div>
-            </SettingsCard>
-
-            {/* Appearance Section */}
-            <SettingsCard
-              icon={<Moon className="w-6 h-6" />}
-              title="Appearance"
-              description="Customize the look and feel"
-            >
-              <SettingsRow 
-                label="Dark Mode" 
-                description="Toggle dark mode on or off"
-              >
-                <Switch checked={darkMode} onCheckedChange={setDarkMode} />
-              </SettingsRow>
-            </SettingsCard>
-
-            {/* Language & Region Section */}
-            <SettingsCard
-              icon={<Globe className="w-6 h-6" />}
-              title="Language & Region"
-              description="Set your preferred language and timezone"
-            >
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium text-foreground mb-2 block">Language</label>
-                  <Select defaultValue="english">
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="english">English</SelectItem>
-                      <SelectItem value="spanish">Spanish</SelectItem>
-                      <SelectItem value="french">French</SelectItem>
-                      <SelectItem value="german">German</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-foreground mb-2 block">Timezone</label>
-                  <Select defaultValue="utc1">
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="utc0">UTC+0 (Greenwich Mean Time)</SelectItem>
-                      <SelectItem value="utc1">UTC+1 (Central European Time)</SelectItem>
-                      <SelectItem value="utc-5">UTC-5 (Eastern Time)</SelectItem>
-                      <SelectItem value="utc-8">UTC-8 (Pacific Time)</SelectItem>
-                    </SelectContent>
-                  </Select>
+                
+                <div className="w-full text-center mt-4">
+                  <p className="text-sm text-muted-foreground">
+                    To update your avatar or display name, please contact your system administrator.
+                    These attributes are managed securely through your Auth0 identity provider.
+                  </p>
                 </div>
               </div>
             </SettingsCard>
 
-            {/* Payment Details Section */}
-            <SettingsCard
-              icon={<CreditCard className="w-6 h-6" />}
-              title="Payment Details"
-              description="Manage your billing and payment information"
-            >
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium text-foreground mb-2 block">Cardholder Name</label>
-                  <Input placeholder="John Doe" defaultValue="John Doe" />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-foreground mb-2 block">Card Number</label>
-                  <Input placeholder="•••• •••• •••• ••••" defaultValue="•••• •••• •••• ••••" />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-foreground mb-2 block">Expiry Date</label>
-                    <Input placeholder="MM/YY" />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-foreground mb-2 block">CVV</label>
-                    <Input placeholder="•••" />
-                  </div>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-foreground mb-2 block">Billing Address</label>
-                  <Input placeholder="123 Main St, City, Country" defaultValue="123 Main St, City, Country" />
-                </div>
-                <Button>Save Payment Details</Button>
-              </div>
-            </SettingsCard>
+
 
             {/* Security Section */}
             <SettingsCard
@@ -264,19 +159,20 @@ const Settings = () => {
               description="Manage your account security"
             >
               <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium text-foreground mb-2 block">Current Password</label>
-                  <Input type="password" placeholder="" />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-foreground mb-2 block">New Password</label>
-                  <Input type="password" placeholder="" />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-foreground mb-2 block">Confirm New Password</label>
-                  <Input type="password" placeholder="" />
-                </div>
-                <Button>Update Password</Button>
+                <p className="text-sm text-muted-foreground mb-4">
+                  If you registered using an email and password, you can request a password reset link to be sent to your email.
+                  If you registered using a social provider (like Google or GitHub), you must manage your credentials through them.
+                </p>
+
+                {message && (
+                  <div className={`p-4 rounded-lg mb-4 text-sm font-medium ${message.type === 'error' ? 'bg-destructive/10 text-destructive' : 'bg-primary/10 text-primary'}`}>
+                    {message.text}
+                  </div>
+                )}
+
+                <Button onClick={handlePasswordReset} disabled={resetting} className="w-full sm:w-auto">
+                  {resetting ? "Sending..." : "Send Password Reset Email"}
+                </Button>
               </div>
             </SettingsCard>
 
@@ -292,21 +188,11 @@ const Settings = () => {
                   label="Log Out" 
                   description="Sign out of your account on this device"
                 >
-                  <Button variant="outline" className="gap-2">
+                  <Button variant="outline" className="gap-2" onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}>
                     <LogOut className="w-4 h-4" />
                     Log Out
                   </Button>
                 </SettingsRow>
-                <div className="flex items-center justify-between py-4">
-                  <div>
-                    <p className="text-sm font-medium text-destructive">Delete Account</p>
-                    <p className="text-sm text-muted-foreground">Permanently delete your account and all data</p>
-                  </div>
-                  <Button variant="destructive" className="gap-2">
-                    <Trash2 className="w-4 h-4" />
-                    Delete Account
-                  </Button>
-                </div>
               </div>
             </SettingsCard>
           </div>
