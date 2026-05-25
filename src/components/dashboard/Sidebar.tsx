@@ -11,7 +11,8 @@ import {
   Video,
   Play,
   Users,
-  Lock
+  Lock,
+  LogOut
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Link, useLocation } from "react-router-dom";
@@ -98,10 +99,16 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
 
 import { useAuth0 } from "@auth0/auth0-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 // SidebarContent extracts the inner content so it can be reused in Sheet and Desktop
 const SidebarContent = ({ isModuleOpen, setIsModuleOpen, location, currentSubPath, moduleTitle, moduleId, isUnlocked }: any) => {
-  const { user } = useAuth0();
+  const { user, logout } = useAuth0();
 
   const name = user?.name || user?.nickname || "User";
   const email = user?.email || "";
@@ -202,19 +209,32 @@ const SidebarContent = ({ isModuleOpen, setIsModuleOpen, location, currentSubPat
 
       {/* User section */}
       <div className="p-4 border-t border-border">
-        <div className="flex items-center gap-3 px-4 py-3">
-          <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-sm font-semibold text-primary-foreground overflow-hidden shrink-0">
-            {picture && !picture.includes('cdn.auth0.com/avatars') ? (
-              <img src={picture} alt={name} className="w-full h-full object-cover" />
-            ) : (
-              initials
-            )}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-foreground truncate">{name}</p>
-            <p className="text-xs text-muted-foreground truncate">{email}</p>
-          </div>
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="flex items-center gap-3 px-2 py-2 w-full hover:bg-secondary rounded-lg transition-colors text-left outline-none">
+              <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-sm font-semibold text-primary-foreground overflow-hidden shrink-0">
+                {picture && !picture.includes('cdn.auth0.com/avatars') ? (
+                  <img src={picture} alt={name} className="w-full h-full object-cover" />
+                ) : (
+                  initials
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground truncate">{name}</p>
+                <p className="text-xs text-muted-foreground truncate">{email}</p>
+              </div>
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-[200px]">
+            <DropdownMenuItem 
+              className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer"
+              onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Logout
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );
