@@ -103,16 +103,35 @@ export const ProtectedRoute = ({ component: Component, requireAdmin = false }: P
   if (verificationError) {
     return (
       <div className="flex flex-col h-screen w-full items-center justify-center p-8 text-center">
-        <h2 className="text-xl font-bold text-destructive mb-2">Verification Failed</h2>
+        <div className="flex flex-col items-center mb-8 p-6 bg-slate-50 rounded-2xl border border-slate-200 shadow-sm w-full max-w-sm">
+          {user?.picture ? (
+            <img src={user.picture} alt={user.name} className="w-20 h-20 rounded-full border-4 border-white shadow-md mb-4" />
+          ) : (
+            <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center text-xl font-bold text-primary-foreground border-4 border-white shadow-md mb-4">
+              {user?.name?.charAt(0) || user?.email?.charAt(0) || "U"}
+            </div>
+          )}
+          <h3 className="text-lg font-bold text-slate-800">{user?.name || "User"}</h3>
+          <p className="text-sm text-slate-500 mb-6">{user?.email}</p>
+          
+          <button 
+            onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
+            className="text-sm text-destructive hover:underline font-medium"
+          >
+            Logout
+          </button>
+        </div>
+
+        <h2 className="text-xl font-bold text-destructive mb-2">Verification Required</h2>
         <p className="text-muted-foreground mb-6">{verificationError}</p>
-        <p className="text-xs text-slate-400 mb-6 font-mono">
+        <p className="text-xs text-slate-400 mb-6 font-mono bg-slate-100 p-2 rounded">
           System Diagnostic: Auth0 reported email_verified={String(user?.email_verified)} for {user?.email}
         </p>
         <button 
           onClick={() => loginWithRedirect({ authorizationParams: { prompt: "login" } })}
-          className="bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90"
+          className="bg-primary text-primary-foreground px-6 py-2 rounded-md hover:bg-primary/90 font-medium shadow-sm transition-all"
         >
-          Force Refresh Verification Status
+          Refresh Verification Status
         </button>
       </div>
     );

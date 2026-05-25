@@ -53,7 +53,7 @@ const App = () => (
               <Routes>
                 {/* Unprotected or Special Routes */}
                 <Route path="/terms" element={<TermsOfConditions />} />
-                
+
                 {/* Protected Routes */}
                 <Route path="/" element={<RootRedirect />} />
                 <Route path="/my-modules" element={<ProtectedRoute component={MyModules} />} />
@@ -68,7 +68,7 @@ const App = () => (
                 <Route path="/library/:id/scenario/:scenarioId/play" element={<ProtectedRoute component={ScenarioGame} />} />
                 <Route path="/library/:id/scenario/:scenarioId/experts" element={<ProtectedRoute component={ExpertConsultants} />} />
                 <Route path="/library/:id/scenario/:scenarioId/evaluation" element={<ProtectedRoute component={ScenarioEvaluation} />} />
-                
+
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

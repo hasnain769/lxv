@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { 
-  BookOpen, 
-  LayoutDashboard, 
-  Settings, 
-  GraduationCap, 
-  Star, 
+import {
+  BookOpen,
+  LayoutDashboard,
+  Settings,
+  GraduationCap,
+  Star,
   Award,
   ChevronDown,
   FileText,
@@ -102,7 +102,7 @@ import { useAuth0 } from "@auth0/auth0-react";
 // SidebarContent extracts the inner content so it can be reused in Sheet and Desktop
 const SidebarContent = ({ isModuleOpen, setIsModuleOpen, location, currentSubPath, moduleTitle, moduleId, isUnlocked }: any) => {
   const { user } = useAuth0();
-  
+
   const name = user?.name || user?.nickname || "User";
   const email = user?.email || "";
   const initials = name
@@ -114,7 +114,7 @@ const SidebarContent = ({ isModuleOpen, setIsModuleOpen, location, currentSubPat
   const picture = user?.picture;
 
   return (
-  <div className="h-full w-full bg-card flex flex-col">
+    <div className="h-full w-full bg-card flex flex-col">
       {/* Logo */}
       <div className="p-6 pr-12 border-b border-border">
         <div className="flex items-center gap-3">
@@ -133,7 +133,7 @@ const SidebarContent = ({ isModuleOpen, setIsModuleOpen, location, currentSubPat
         <div className="space-y-1">
           <NavItem icon={<LayoutDashboard className="w-5 h-5" />} label="Dashboard" href="/" active={location.pathname === "/"} comingSoon />
           <NavItem icon={<Star className="w-5 h-5" />} label="My Modules" href="/my-modules" active={location.pathname === "/my-modules"} comingSoon />
-          
+
           {/* Module Library with collapsible submenu */}
           <Collapsible open={isModuleOpen} onOpenChange={setIsModuleOpen}>
             <div
@@ -151,35 +151,35 @@ const SidebarContent = ({ isModuleOpen, setIsModuleOpen, location, currentSubPat
               {(isModuleOpen || location.pathname.startsWith("/library/")) && (
                 <CollapsibleTrigger asChild>
                   <button className="p-1 hover:bg-white/10 rounded">
-                    <ChevronDown 
+                    <ChevronDown
                       className={cn(
                         "w-4 h-4 transition-transform duration-200",
                         isModuleOpen ? "rotate-180" : ""
-                      )} 
+                      )}
                     />
                   </button>
                 </CollapsibleTrigger>
               )}
             </div>
-            
+
             {(isModuleOpen || location.pathname.startsWith("/library/")) && (
               <CollapsibleContent className="mt-1 ml-2 space-y-0.5">
                 {/* Module Title */}
                 <div className="px-4 py-2 text-xs font-semibold text-primary tracking-wide">
                   {moduleTitle}
                 </div>
-                
+
                 {/* Sub-navigation items */}
                 {moduleSubItems.map((item) => {
                   const isSpeakersPage = currentSubPath === "speakers";
-                  const isActive = item.id === "speakers" 
-                    ? isSpeakersPage 
+                  const isActive = item.id === "speakers"
+                    ? isSpeakersPage
                     : item.id === "introduction" && !isSpeakersPage;
-                  const href = item.isSeparatePage 
+                  const href = item.isSeparatePage
                     ? `/library/${moduleId}/${item.id}`
                     : `/library/${moduleId}`;
                   const isItemLocked = !item.alwaysUnlocked && !isUnlocked;
-                  
+
                   return (
                     <SubNavItem
                       key={item.id}
@@ -194,7 +194,7 @@ const SidebarContent = ({ isModuleOpen, setIsModuleOpen, location, currentSubPat
               </CollapsibleContent>
             )}
           </Collapsible>
-          
+
           <NavItem icon={<Award className="w-5 h-5" />} label="Certification" href="/certification" active={location.pathname.startsWith("/certification")} comingSoon />
           <NavItem icon={<Settings className="w-5 h-5" />} label="Settings" href="/settings" active={location.pathname === "/settings"} comingSoon />
         </div>
@@ -216,7 +216,7 @@ const SidebarContent = ({ isModuleOpen, setIsModuleOpen, location, currentSubPat
           </div>
         </div>
       </div>
-  </div>
+    </div>
   );
 };
 
@@ -225,15 +225,15 @@ const Sidebar = () => {
   const { isModuleUnlocked } = useSubscription();
   const isInModule = location.pathname.startsWith("/library/") && location.pathname !== "/library";
   const currentSubPath = location.pathname.split("/").slice(3).join("/");
-  
+
   // Extract module ID from path
   const pathParts = location.pathname.split("/");
   const moduleId = pathParts[2] || "";
   const moduleTitle = moduleId.replace(/-/g, " ").toUpperCase();
   const isUnlocked = isModuleUnlocked(moduleId);
-  
+
   const [isModuleOpen, setIsModuleOpen] = useState(isInModule);
-  
+
   useEffect(() => {
     if (isInModule) {
       setIsModuleOpen(true);
@@ -241,7 +241,7 @@ const Sidebar = () => {
   }, [isInModule]);
 
   const sidebarProps = { isModuleOpen, setIsModuleOpen, location, currentSubPath, moduleTitle, moduleId, isUnlocked };
-  
+
   return (
     <>
       {/* Mobile Top Navigation */}
