@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import EndScenarioDialog from "@/components/EndScenarioDialog";
+import DraftingDesk from "@/components/DraftingDesk";
 import { Badge } from "@/components/ui/badge";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth0 } from "@auth0/auth0-react";
@@ -152,6 +153,8 @@ const ScenarioGame = () => {
   const [response, setResponse] = useState("");
   const [professorQuery, setProfessorQuery] = useState("");
   const [showProfessor, setShowProfessor] = useState(false);
+  const [showDraftingDesk, setShowDraftingDesk] = useState(false);
+  const [activeDraftName, setActiveDraftName] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [isMarcTyping, setIsMarcTyping] = useState(false);
   const [endScenarioOpen, setEndScenarioOpen] = useState(false);
@@ -288,6 +291,29 @@ const ScenarioGame = () => {
     },
     enabled: !!scenarioId && !!urlChatId,
   });
+
+  // Fetch Shared Drafts
+  const { data: sharedDrafts = [], refetch: refetchDrafts } = useQuery({
+    queryKey: ["shared-drafts", urlChatId],
+    queryFn: async () => {
+      if (!urlChatId) return [];
+      const token = await getAccessTokenSilently();
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8001";
+      const res = await fetch(`${apiUrl}/chats/${urlChatId}/drafts`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) return [];
+      return res.json();
+    },
+    enabled: !!urlChatId
+  });
+
+  // Refetch drafts list whenever activeChat updates (e.g. after a message event)
+  useEffect(() => {
+    if (activeChat) {
+      refetchDrafts();
+    }
+  }, [activeChat, refetchDrafts]);
 
   // Auto-navigate to scorecard when state becomes ENDED
   useEffect(() => {
@@ -432,6 +458,7 @@ const ScenarioGame = () => {
         setIsSendingEmail(false);
         setIsMarcTyping(false);
         queryClient.invalidateQueries({ queryKey: ["active-chat", scenarioId] });
+        refetchDrafts();
       }
     }
   };
@@ -506,29 +533,22 @@ const ScenarioGame = () => {
 
   const isInitializing = !urlChatId || loadingChat || (activeChat && activeChat.state.toUpperCase() === "INTRO");
 
-  const emails: EmailMessage[] = localGameMessages
-    .filter((msg: any) => {
-      // The backend saves the Professor's scorecard as a GAME state message.
-      // We must hide it from the email thread so it only appears in the evaluation UI.
-      if (msg.source === "Professor") return false;
-      return msg.state?.toLowerCase() !== "ended";
-    })
-    .map((msg: any) => ({
-      id: msg.id,
-      senderInitials: msg.agent_type === "UserMessage" ? "D" : msg.source === "Professor" ? "P" : "M",
-      senderName: msg.agent_type === "UserMessage" ? "Danny" : msg.source === "Professor" ? "Professor Guide" : "Marc Feider",
-      senderEmail: msg.agent_type === "UserMessage" ? "danny@company.com" : msg.source === "Professor" ? "system@guide" : "marc.feider@company.com",
-      timestamp: new Date(msg.created_at).toLocaleString("en-US", {
-        month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: true,
-      }),
-      content: msg.content ? msg.content.split("\n").filter((line: string) => line.trim()) : [],
-    }));
+  const filteredGameMessages = localGameMessages.filter((msg: any) => {
+    if (msg.source === "Professor") return false;
+    return msg.state?.toLowerCase() !== "ended";
+  });
 
   return (
     <div className="flex flex-col h-[100dvh] bg-background overflow-hidden w-full">
       <div className="flex-1 flex w-full h-full overflow-hidden">
-        {/* Main Content */}
-        <div className={`flex-1 flex flex-col w-full h-full transition-all duration-300 ${showProfessor ? 'md:mr-96' : ''}`}>
+        {/* Main Content (Email thread) */}
+        <div className={`flex-1 flex flex-col h-full overflow-hidden transition-all duration-300 ${
+          showDraftingDesk 
+            ? 'hidden lg:flex lg:w-1/2' 
+            : showProfessor 
+              ? 'md:mr-96' 
+              : ''
+        }`}>
           {/* Header */}
           <header className="shrink-0 bg-card border-b border-border z-20">
             <div className="px-4 sm:px-6 py-4 flex items-center gap-4">
@@ -563,6 +583,28 @@ const ScenarioGame = () => {
                 <Database className="w-3.5 h-3.5 md:w-4 md:h-4" />
                 RCS Access
               </Button>
+
+              {/* Drafting Desk Toggle Button */}
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 h-8 text-xs px-2.5 md:h-9 md:text-sm md:px-3 md:gap-2 bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100 hover:text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800 dark:hover:bg-indigo-900/50"
+                onClick={() => {
+                  if (sharedDrafts && sharedDrafts.length > 0 && !activeDraftName) {
+                    setActiveDraftName(sharedDrafts[0].document_name);
+                  }
+                  setShowDraftingDesk(true);
+                }}
+              >
+                <FileText className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                Drafting Desk
+                {sharedDrafts && sharedDrafts.length > 0 && (
+                  <Badge variant="secondary" className="ml-1 px-1.5 py-0 h-4 bg-indigo-600 text-white border-transparent text-[10px]">
+                    {sharedDrafts.length}
+                  </Badge>
+                )}
+              </Button>
+
               <Button
                 variant="outline"
                 size="sm"
@@ -591,73 +633,88 @@ const ScenarioGame = () => {
 
           {/* Email Thread - Scrollable */}
           <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
-            {emails.map((email) => (
-              <div key={email.id} className={`border border-border rounded-xl overflow-hidden ${email.senderInitials === "D" ? "bg-slate-100 dark:bg-slate-800/50" : "bg-card"}`}>
-                {/* Email Header with distinct background */}
-                <div className="bg-muted/50 border-b border-border px-5 py-4">
-                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
+            {filteredGameMessages.map((msg: any) => {
+              const isSystem = msg.agent_type === "SYSTEM" || msg.source === "system";
+              let parsedEvent: any = null;
+              if (isSystem) {
+                try {
+                  parsedEvent = JSON.parse(msg.content);
+                } catch (e) {}
+              }
+
+              if (parsedEvent && parsedEvent.event === "document_shared") {
+                const docName = parsedEvent.document_name || "";
+                const agentName = (parsedEvent.agent_name || "Advisor").replace(/_/g, " ");
+                return (
+                  <div
+                    key={msg.id}
+                    className="border border-indigo-100 dark:border-indigo-900/50 bg-indigo-50/20 dark:bg-indigo-950/10 rounded-xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm animate-in fade-in duration-300"
+                  >
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 font-semibold text-sm shrink-0">
-                        {email.senderInitials}
+                      <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center shrink-0">
+                        <Paperclip className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                       </div>
-                      <div className="min-w-0">
-                        <p className="font-semibold text-foreground truncate">{email.senderName}</p>
-                        <p className="text-sm text-muted-foreground truncate">{email.senderEmail}</p>
+                      <div>
+                        <p className="font-semibold text-slate-800 dark:text-slate-200 text-sm">
+                          {agentName} shared a draft template
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5 capitalize">
+                          Document: {docName.replace(/_/g, " ")}
+                        </p>
                       </div>
                     </div>
-                    <p className="text-sm text-muted-foreground shrink-0">{email.timestamp}</p>
+                    <Button
+                      size="sm"
+                      className="bg-indigo-600 hover:bg-indigo-700 text-white shrink-0 font-semibold gap-1.5 h-9"
+                      onClick={() => {
+                        setActiveDraftName(docName);
+                        setShowDraftingDesk(true);
+                      }}
+                    >
+                      <FileText className="w-4 h-4" />
+                      Open Drafting Desk
+                    </Button>
+                  </div>
+                );
+              }
+
+              const senderInitials = msg.agent_type === "UserMessage" ? "D" : msg.source === "Professor" ? "P" : "M";
+              const senderName = msg.agent_type === "UserMessage" ? "Danny" : msg.source === "Professor" ? "Professor Guide" : "Marc Feider";
+              const senderEmail = msg.agent_type === "UserMessage" ? "danny@company.com" : msg.source === "Professor" ? "system@guide" : "marc.feider@company.com";
+              const timestamp = new Date(msg.created_at).toLocaleString("en-US", {
+                month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: true,
+              });
+              const paragraphs = msg.content ? msg.content.split("\n").filter((line: string) => line.trim()) : [];
+
+              return (
+                <div key={msg.id} className={`border border-border rounded-xl overflow-hidden ${msg.agent_type === "UserMessage" ? "bg-slate-100 dark:bg-slate-800/50" : "bg-card"}`}>
+                  {/* Email Header with distinct background */}
+                  <div className="bg-muted/50 border-b border-border px-5 py-4">
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 font-semibold text-sm shrink-0">
+                          {senderInitials}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-semibold text-foreground truncate">{senderName}</p>
+                          <p className="text-sm text-muted-foreground truncate">{senderEmail}</p>
+                        </div>
+                      </div>
+                      <p className="text-sm text-muted-foreground shrink-0">{timestamp}</p>
+                    </div>
+                  </div>
+
+                  {/* Email Body */}
+                  <div className="p-5 space-y-3">
+                    {paragraphs.map((paragraph: string, index: number) => (
+                      <p key={index} className="text-foreground">
+                        {paragraph}
+                      </p>
+                    ))}
                   </div>
                 </div>
-
-                {/* Email Body */}
-                <div className="p-5 space-y-3">
-                  {email.content.map((paragraph, index) => (
-                    <p key={index} className="text-foreground">
-                      {paragraph}
-                    </p>
-                  ))}
-
-                  {/* Attachments */}
-                  {email.attachments && email.attachments.length > 0 && (
-                    <div className="pt-4 mt-4 border-t border-border">
-                      <p className="text-sm text-primary font-medium mb-3">
-                        {email.attachments.length} Attachment{email.attachments.length > 1 ? "s" : ""}
-                      </p>
-                      <div className="space-y-2">
-                        {email.attachments.map((attachment, idx) => (
-                          <div
-                            key={idx}
-                            className="flex items-center justify-between bg-muted/30 border border-border rounded-lg p-3"
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
-                                {attachment.type === "PDF" ? (
-                                  <FileText className="w-5 h-5 text-muted-foreground" />
-                                ) : (
-                                  <Paperclip className="w-5 h-5 text-muted-foreground" />
-                                )}
-                              </div>
-                              <div>
-                                <p className="font-medium text-foreground text-sm">{attachment.name}</p>
-                                <p className="text-xs text-muted-foreground">{attachment.type}</p>
-                              </div>
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-muted-foreground hover:text-foreground"
-                              onClick={() => openDocument(attachment)}
-                            >
-                              View
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
+              );
+            })}
 
             {(isMarcTyping || isInitializing) && (
               <div className="bg-card border border-border rounded-xl overflow-hidden animate-pulse">
@@ -728,6 +785,20 @@ const ScenarioGame = () => {
             )}
           </div>
         </div>
+
+        {/* Drafting Desk Panel */}
+        {showDraftingDesk && (
+          <div className="w-full lg:w-1/2 h-full border-l border-border bg-background z-40 relative">
+            <DraftingDesk
+              chatId={urlChatId || ""}
+              documentName={activeDraftName}
+              sharedDrafts={sharedDrafts}
+              onClose={() => setShowDraftingDesk(false)}
+              getAccessTokenSilently={getAccessTokenSilently}
+              refetchDrafts={refetchDrafts}
+            />
+          </div>
+        )}
 
         {/* Professor Guide Sidebar */}
         {showProfessor && (
