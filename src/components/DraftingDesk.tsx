@@ -2,16 +2,31 @@ import { useState, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
+import { Underline } from "@tiptap/extension-underline";
+import { TextAlign } from "@tiptap/extension-text-align";
+import { Highlight } from "@tiptap/extension-highlight";
+import { Table } from "@tiptap/extension-table";
+import { TableRow } from "@tiptap/extension-table-row";
+import { TableHeader } from "@tiptap/extension-table-header";
+import { TableCell } from "@tiptap/extension-table-cell";
 import { 
   X, Save, MessageSquare, History, Check, Play, Undo, Redo, Bold, Italic, 
   List, ListOrdered, FileText, Sparkles, CheckCircle2, ChevronRight, Lock, AlertCircle,
-  PanelRight
+  PanelRight, Underline as UnderlineIcon, Strikethrough, Highlighter, AlignLeft, AlignCenter,
+  AlignRight, AlignJustify, Table as TableIcon, Heading, Plus, Trash2, ChevronDown
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 interface DraftingDeskProps {
   chatId: string;
@@ -92,7 +107,22 @@ export default function DraftingDesk({
 
   // Initialize Tiptap editor
   const editor = useEditor({
-    extensions: [StarterKit],
+    extensions: [
+      StarterKit,
+      Underline,
+      TextAlign.configure({
+        types: ["heading", "paragraph"],
+      }),
+      Highlight.configure({
+        multicolor: true,
+      }),
+      Table.configure({
+        resizable: true,
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
+    ],
     content: "",
     editorProps: {
       attributes: {
@@ -100,6 +130,14 @@ export default function DraftingDesk({
       },
     },
   });
+
+  const getActiveFormatLabel = () => {
+    if (!editor) return "Normal";
+    if (editor.isActive("heading", { level: 1 })) return "Heading 1";
+    if (editor.isActive("heading", { level: 2 })) return "Heading 2";
+    if (editor.isActive("heading", { level: 3 })) return "Heading 3";
+    return "Normal";
+  };
 
   // Update editor content when draft loads
   useEffect(() => {
@@ -299,8 +337,48 @@ export default function DraftingDesk({
           {editor && (
             <div className="shrink-0 border-b border-border bg-muted/40 p-2 flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-0.5 flex-wrap">
+                {/* Format Dropdown */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-8 gap-1.5 text-xs font-semibold px-2 text-muted-foreground hover:text-foreground">
+                      <Heading className="h-3.5 w-3.5" />
+                      <span>{getActiveFormatLabel()}</span>
+                      <ChevronDown className="h-3 w-3 opacity-50" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-40">
+                    <DropdownMenuItem 
+                      onClick={() => editor.chain().focus().setParagraph().run()}
+                      className={editor.isActive("paragraph") ? "bg-accent font-semibold" : ""}
+                    >
+                      Normal Text
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+                      className={editor.isActive("heading", { level: 1 }) ? "bg-accent font-semibold" : ""}
+                    >
+                      Heading 1
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+                      className={editor.isActive("heading", { level: 2 }) ? "bg-accent font-semibold" : ""}
+                    >
+                      Heading 2
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+                      className={editor.isActive("heading", { level: 3 }) ? "bg-accent font-semibold" : ""}
+                    >
+                      Heading 3
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                <div className="w-px h-4 bg-border mx-1" />
+
+                {/* Inline formatting buttons */}
                 <Button
-                  variant="ghost"
+                  variant={editor.isActive("bold") ? "secondary" : "ghost"}
                   size="icon"
                   className="h-8 w-8"
                   onClick={() => editor.chain().focus().toggleBold().run()}
@@ -309,7 +387,7 @@ export default function DraftingDesk({
                   <Bold className="h-4 w-4" />
                 </Button>
                 <Button
-                  variant="ghost"
+                  variant={editor.isActive("italic") ? "secondary" : "ghost"}
                   size="icon"
                   className="h-8 w-8"
                   onClick={() => editor.chain().focus().toggleItalic().run()}
@@ -317,9 +395,72 @@ export default function DraftingDesk({
                 >
                   <Italic className="h-4 w-4" />
                 </Button>
-                <div className="w-px h-4 bg-border mx-1" />
                 <Button
-                  variant="ghost"
+                  variant={editor.isActive("underline") ? "secondary" : "ghost"}
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => editor.chain().focus().toggleUnderline().run()}
+                >
+                  <UnderlineIcon className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={editor.isActive("strike") ? "secondary" : "ghost"}
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => editor.chain().focus().toggleStrike().run()}
+                >
+                  <Strikethrough className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={editor.isActive("highlight") ? "secondary" : "ghost"}
+                  size="icon"
+                  className="h-8 w-8 text-amber-500 hover:text-amber-600 dark:text-amber-400"
+                  onClick={() => editor.chain().focus().toggleHighlight().run()}
+                >
+                  <Highlighter className="h-4 w-4" />
+                </Button>
+
+                <div className="w-px h-4 bg-border mx-1" />
+
+                {/* Alignment buttons */}
+                <Button
+                  variant={editor.isActive({ textAlign: "left" }) ? "secondary" : "ghost"}
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => editor.chain().focus().setTextAlign("left").run()}
+                >
+                  <AlignLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={editor.isActive({ textAlign: "center" }) ? "secondary" : "ghost"}
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => editor.chain().focus().setTextAlign("center").run()}
+                >
+                  <AlignCenter className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={editor.isActive({ textAlign: "right" }) ? "secondary" : "ghost"}
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => editor.chain().focus().setTextAlign("right").run()}
+                >
+                  <AlignRight className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={editor.isActive({ textAlign: "justify" }) ? "secondary" : "ghost"}
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => editor.chain().focus().setTextAlign("justify").run()}
+                >
+                  <AlignJustify className="h-4 w-4" />
+                </Button>
+
+                <div className="w-px h-4 bg-border mx-1" />
+
+                {/* Lists */}
+                <Button
+                  variant={editor.isActive("bulletList") ? "secondary" : "ghost"}
                   size="icon"
                   className="h-8 w-8"
                   onClick={() => editor.chain().focus().toggleBulletList().run()}
@@ -327,14 +468,81 @@ export default function DraftingDesk({
                   <List className="h-4 w-4" />
                 </Button>
                 <Button
-                  variant="ghost"
+                  variant={editor.isActive("orderedList") ? "secondary" : "ghost"}
                   size="icon"
                   className="h-8 w-8"
                   onClick={() => editor.chain().focus().toggleOrderedList().run()}
                 >
                   <ListOrdered className="h-4 w-4" />
                 </Button>
+
                 <div className="w-px h-4 bg-border mx-1" />
+
+                {/* Table Dropdown */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-8 gap-1.5 text-xs font-semibold px-2 text-muted-foreground hover:text-foreground">
+                      <TableIcon className="h-3.5 w-3.5" />
+                      <span>Table</span>
+                      <ChevronDown className="h-3 w-3 opacity-50" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-48">
+                    <DropdownMenuItem onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}>
+                      <Plus className="mr-2 h-3.5 w-3.5" /> Insert Table (3x3)
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem 
+                      disabled={!editor.isActive("table")}
+                      onClick={() => editor.chain().focus().addColumnAfter().run()}
+                    >
+                      Add Column After
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      disabled={!editor.isActive("table")}
+                      onClick={() => editor.chain().focus().addColumnBefore().run()}
+                    >
+                      Add Column Before
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      disabled={!editor.isActive("table")}
+                      onClick={() => editor.chain().focus().deleteColumn().run()}
+                    >
+                      <Trash2 className="mr-2 h-3.5 w-3.5 text-destructive" /> Delete Column
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem 
+                      disabled={!editor.isActive("table")}
+                      onClick={() => editor.chain().focus().addRowAfter().run()}
+                    >
+                      Add Row Below
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      disabled={!editor.isActive("table")}
+                      onClick={() => editor.chain().focus().addRowBefore().run()}
+                    >
+                      Add Row Above
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      disabled={!editor.isActive("table")}
+                      onClick={() => editor.chain().focus().deleteRow().run()}
+                    >
+                      <Trash2 className="mr-2 h-3.5 w-3.5 text-destructive" /> Delete Row
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem 
+                      disabled={!editor.isActive("table")}
+                      onClick={() => editor.chain().focus().deleteTable().run()}
+                      className="text-destructive focus:bg-destructive/10"
+                    >
+                      <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete Table
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                <div className="w-px h-4 bg-border mx-1" />
+
+                {/* Undo/Redo */}
                 <Button
                   variant="ghost"
                   size="icon"
