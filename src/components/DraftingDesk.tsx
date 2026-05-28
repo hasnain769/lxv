@@ -340,7 +340,12 @@ export default function DraftingDesk({
                 {/* Format Dropdown */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-8 gap-1.5 text-xs font-semibold px-2 text-muted-foreground hover:text-foreground">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-8 gap-1.5 text-xs font-semibold px-2 text-muted-foreground hover:text-foreground"
+                      title="Text Formatting / Headings"
+                    >
                       <Heading className="h-3.5 w-3.5" />
                       <span>{getActiveFormatLabel()}</span>
                       <ChevronDown className="h-3 w-3 opacity-50" />
@@ -383,6 +388,7 @@ export default function DraftingDesk({
                   className="h-8 w-8"
                   onClick={() => editor.chain().focus().toggleBold().run()}
                   disabled={!editor.can().chain().focus().toggleBold().run()}
+                  title="Bold"
                 >
                   <Bold className="h-4 w-4" />
                 </Button>
@@ -392,6 +398,7 @@ export default function DraftingDesk({
                   className="h-8 w-8"
                   onClick={() => editor.chain().focus().toggleItalic().run()}
                   disabled={!editor.can().chain().focus().toggleItalic().run()}
+                  title="Italic"
                 >
                   <Italic className="h-4 w-4" />
                 </Button>
@@ -400,6 +407,7 @@ export default function DraftingDesk({
                   size="icon"
                   className="h-8 w-8"
                   onClick={() => editor.chain().focus().toggleUnderline().run()}
+                  title="Underline"
                 >
                   <UnderlineIcon className="h-4 w-4" />
                 </Button>
@@ -408,6 +416,7 @@ export default function DraftingDesk({
                   size="icon"
                   className="h-8 w-8"
                   onClick={() => editor.chain().focus().toggleStrike().run()}
+                  title="Strikethrough"
                 >
                   <Strikethrough className="h-4 w-4" />
                 </Button>
@@ -416,6 +425,7 @@ export default function DraftingDesk({
                   size="icon"
                   className="h-8 w-8 text-amber-500 hover:text-amber-600 dark:text-amber-400"
                   onClick={() => editor.chain().focus().toggleHighlight().run()}
+                  title="Highlight Text"
                 >
                   <Highlighter className="h-4 w-4" />
                 </Button>
@@ -428,6 +438,7 @@ export default function DraftingDesk({
                   size="icon"
                   className="h-8 w-8"
                   onClick={() => editor.chain().focus().setTextAlign("left").run()}
+                  title="Align Left"
                 >
                   <AlignLeft className="h-4 w-4" />
                 </Button>
@@ -436,6 +447,7 @@ export default function DraftingDesk({
                   size="icon"
                   className="h-8 w-8"
                   onClick={() => editor.chain().focus().setTextAlign("center").run()}
+                  title="Align Center"
                 >
                   <AlignCenter className="h-4 w-4" />
                 </Button>
@@ -444,6 +456,7 @@ export default function DraftingDesk({
                   size="icon"
                   className="h-8 w-8"
                   onClick={() => editor.chain().focus().setTextAlign("right").run()}
+                  title="Align Right"
                 >
                   <AlignRight className="h-4 w-4" />
                 </Button>
@@ -452,6 +465,7 @@ export default function DraftingDesk({
                   size="icon"
                   className="h-8 w-8"
                   onClick={() => editor.chain().focus().setTextAlign("justify").run()}
+                  title="Align Justify"
                 >
                   <AlignJustify className="h-4 w-4" />
                 </Button>
@@ -464,6 +478,7 @@ export default function DraftingDesk({
                   size="icon"
                   className="h-8 w-8"
                   onClick={() => editor.chain().focus().toggleBulletList().run()}
+                  title="Bullet List"
                 >
                   <List className="h-4 w-4" />
                 </Button>
@@ -472,6 +487,7 @@ export default function DraftingDesk({
                   size="icon"
                   className="h-8 w-8"
                   onClick={() => editor.chain().focus().toggleOrderedList().run()}
+                  title="Numbered List"
                 >
                   <ListOrdered className="h-4 w-4" />
                 </Button>
@@ -481,7 +497,12 @@ export default function DraftingDesk({
                 {/* Table Dropdown */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-8 gap-1.5 text-xs font-semibold px-2 text-muted-foreground hover:text-foreground">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-8 gap-1.5 text-xs font-semibold px-2 text-muted-foreground hover:text-foreground"
+                      title="Table Actions"
+                    >
                       <TableIcon className="h-3.5 w-3.5" />
                       <span>Table</span>
                       <ChevronDown className="h-3 w-3 opacity-50" />
@@ -549,6 +570,7 @@ export default function DraftingDesk({
                   className="h-8 w-8"
                   onClick={() => editor.chain().focus().undo().run()}
                   disabled={!editor.can().chain().focus().undo().run()}
+                  title="Undo"
                 >
                   <Undo className="h-4 w-4" />
                 </Button>
@@ -558,6 +580,7 @@ export default function DraftingDesk({
                   className="h-8 w-8"
                   onClick={() => editor.chain().focus().redo().run()}
                   disabled={!editor.can().chain().focus().redo().run()}
+                  title="Redo"
                 >
                   <Redo className="h-4 w-4" />
                 </Button>
@@ -573,6 +596,7 @@ export default function DraftingDesk({
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                   onClick={() => setShowInspector(!showInspector)}
+                  title="Toggle Suggestions & History Panel"
                 >
                   <PanelRight className="h-3.5 w-3.5" />
                   <span className="hidden xs:inline">
