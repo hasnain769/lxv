@@ -27,6 +27,26 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
+// Custom tooltip wrapper that shows instantly with a white rounded bubble and black text
+const TooltipWrapper = ({ children, content }: { children: React.ReactNode; content: string }) => {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        {children}
+      </TooltipTrigger>
+      <TooltipContent className="bg-white text-black border border-slate-200 shadow-md text-xs font-semibold px-2 py-1 select-none z-50">
+        {content}
+      </TooltipContent>
+    </Tooltip>
+  );
+};
 
 interface DraftingDeskProps {
   chatId: string;
@@ -144,9 +164,35 @@ export default function DraftingDesk({
     if (editor && draft) {
       try {
         const parsed = JSON.parse(draft.content_json);
-        editor.commands.setContent(parsed);
+        
+        // Self-healing check: if the content has only one block with newlines,
+        // split it into proper paragraph nodes so that formatting works line-by-line.
+        if (
+          parsed && 
+          parsed.type === "doc" && 
+          parsed.content && 
+          parsed.content.length === 1 && 
+          parsed.content[0].type === "paragraph" && 
+          parsed.content[0].content && 
+          parsed.content[0].content[0] && 
+          parsed.content[0].content[0].text && 
+          parsed.content[0].content[0].text.includes("\n")
+        ) {
+          const fullText = parsed.content[0].content[0].text;
+          const htmlContent = fullText
+            .split("\n")
+            .map((line: string) => line.trim() ? `<p>${line}</p>` : "<p></p>")
+            .join("");
+          editor.commands.setContent(htmlContent);
+        } else {
+          editor.commands.setContent(parsed);
+        }
       } catch (e) {
-        editor.commands.setContent(draft.content_text || "");
+        const htmlContent = (draft.content_text || "")
+          .split("\n")
+          .map((line: string) => line.trim() ? `<p>${line}</p>` : "<p></p>")
+          .join("");
+        editor.commands.setContent(htmlContent);
       }
     }
   }, [editor, draft]);
@@ -289,7 +335,8 @@ export default function DraftingDesk({
   }
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-background relative">
+    <TooltipProvider delayDuration={0}>
+      <div className="flex flex-col h-full overflow-hidden bg-background relative">
       {/* Header */}
       <div className="shrink-0 border-b border-border bg-slate-50/50 dark:bg-slate-900/50 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
@@ -338,270 +385,294 @@ export default function DraftingDesk({
             <div className="shrink-0 border-b border-border bg-muted/40 p-2 flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-0.5 flex-wrap">
                 {/* Format Dropdown */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-8 gap-1.5 text-xs font-semibold px-2 text-muted-foreground hover:text-foreground"
-                      title="Text Formatting / Headings"
-                    >
-                      <Heading className="h-3.5 w-3.5" />
-                      <span>{getActiveFormatLabel()}</span>
-                      <ChevronDown className="h-3 w-3 opacity-50" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-40">
-                    <DropdownMenuItem 
-                      onClick={() => editor.chain().focus().setParagraph().run()}
-                      className={editor.isActive("paragraph") ? "bg-accent font-semibold" : ""}
-                    >
-                      Normal Text
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-                      className={editor.isActive("heading", { level: 1 }) ? "bg-accent font-semibold" : ""}
-                    >
-                      Heading 1
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-                      className={editor.isActive("heading", { level: 2 }) ? "bg-accent font-semibold" : ""}
-                    >
-                      Heading 2
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-                      className={editor.isActive("heading", { level: 3 }) ? "bg-accent font-semibold" : ""}
-                    >
-                      Heading 3
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <TooltipWrapper content="Text Formatting / Headings">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 gap-1.5 text-xs font-semibold px-2 text-muted-foreground hover:text-foreground"
+                      >
+                        <Heading className="h-3.5 w-3.5" />
+                        <span>{getActiveFormatLabel()}</span>
+                        <ChevronDown className="h-3 w-3 opacity-50" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-40">
+                      <DropdownMenuItem 
+                        onClick={() => editor.chain().focus().setParagraph().run()}
+                        className={editor.isActive("paragraph") ? "bg-accent font-semibold" : ""}
+                      >
+                        Normal Text
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+                        className={editor.isActive("heading", { level: 1 }) ? "bg-accent font-semibold" : ""}
+                      >
+                        Heading 1
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+                        className={editor.isActive("heading", { level: 2 }) ? "bg-accent font-semibold" : ""}
+                      >
+                        Heading 2
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+                        className={editor.isActive("heading", { level: 3 }) ? "bg-accent font-semibold" : ""}
+                      >
+                        Heading 3
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TooltipWrapper>
 
                 <div className="w-px h-4 bg-border mx-1" />
 
                 {/* Inline formatting buttons */}
-                <Button
-                  variant={editor.isActive("bold") ? "secondary" : "ghost"}
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => editor.chain().focus().toggleBold().run()}
-                  disabled={!editor.can().chain().focus().toggleBold().run()}
-                  title="Bold"
-                >
-                  <Bold className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant={editor.isActive("italic") ? "secondary" : "ghost"}
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => editor.chain().focus().toggleItalic().run()}
-                  disabled={!editor.can().chain().focus().toggleItalic().run()}
-                  title="Italic"
-                >
-                  <Italic className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant={editor.isActive("underline") ? "secondary" : "ghost"}
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => editor.chain().focus().toggleUnderline().run()}
-                  title="Underline"
-                >
-                  <UnderlineIcon className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant={editor.isActive("strike") ? "secondary" : "ghost"}
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => editor.chain().focus().toggleStrike().run()}
-                  title="Strikethrough"
-                >
-                  <Strikethrough className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant={editor.isActive("highlight") ? "secondary" : "ghost"}
-                  size="icon"
-                  className="h-8 w-8 text-amber-500 hover:text-amber-600 dark:text-amber-400"
-                  onClick={() => editor.chain().focus().toggleHighlight().run()}
-                  title="Highlight Text"
-                >
-                  <Highlighter className="h-4 w-4" />
-                </Button>
+                <TooltipWrapper content="Bold">
+                  <Button
+                    variant={editor.isActive("bold") ? "secondary" : "ghost"}
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => editor.chain().focus().toggleBold().run()}
+                    disabled={!editor.can().chain().focus().toggleBold().run()}
+                  >
+                    <Bold className="h-4 w-4" />
+                  </Button>
+                </TooltipWrapper>
+
+                <TooltipWrapper content="Italic">
+                  <Button
+                    variant={editor.isActive("italic") ? "secondary" : "ghost"}
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => editor.chain().focus().toggleItalic().run()}
+                    disabled={!editor.can().chain().focus().toggleItalic().run()}
+                  >
+                    <Italic className="h-4 w-4" />
+                  </Button>
+                </TooltipWrapper>
+
+                <TooltipWrapper content="Underline">
+                  <Button
+                    variant={editor.isActive("underline") ? "secondary" : "ghost"}
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => editor.chain().focus().toggleUnderline().run()}
+                  >
+                    <UnderlineIcon className="h-4 w-4" />
+                  </Button>
+                </TooltipWrapper>
+
+                <TooltipWrapper content="Strikethrough">
+                  <Button
+                    variant={editor.isActive("strike") ? "secondary" : "ghost"}
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => editor.chain().focus().toggleStrike().run()}
+                  >
+                    <Strikethrough className="h-4 w-4" />
+                  </Button>
+                </TooltipWrapper>
+
+                <TooltipWrapper content="Highlight Text">
+                  <Button
+                    variant={editor.isActive("highlight") ? "secondary" : "ghost"}
+                    size="icon"
+                    className="h-8 w-8 text-amber-500 hover:text-amber-600 dark:text-amber-400"
+                    onClick={() => editor.chain().focus().toggleHighlight().run()}
+                  >
+                    <Highlighter className="h-4 w-4" />
+                  </Button>
+                </TooltipWrapper>
 
                 <div className="w-px h-4 bg-border mx-1" />
 
                 {/* Alignment buttons */}
-                <Button
-                  variant={editor.isActive({ textAlign: "left" }) ? "secondary" : "ghost"}
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => editor.chain().focus().setTextAlign("left").run()}
-                  title="Align Left"
-                >
-                  <AlignLeft className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant={editor.isActive({ textAlign: "center" }) ? "secondary" : "ghost"}
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => editor.chain().focus().setTextAlign("center").run()}
-                  title="Align Center"
-                >
-                  <AlignCenter className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant={editor.isActive({ textAlign: "right" }) ? "secondary" : "ghost"}
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => editor.chain().focus().setTextAlign("right").run()}
-                  title="Align Right"
-                >
-                  <AlignRight className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant={editor.isActive({ textAlign: "justify" }) ? "secondary" : "ghost"}
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => editor.chain().focus().setTextAlign("justify").run()}
-                  title="Align Justify"
-                >
-                  <AlignJustify className="h-4 w-4" />
-                </Button>
+                <TooltipWrapper content="Align Left">
+                  <Button
+                    variant={editor.isActive({ textAlign: "left" }) ? "secondary" : "ghost"}
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => editor.chain().focus().setTextAlign("left").run()}
+                  >
+                    <AlignLeft className="h-4 w-4" />
+                  </Button>
+                </TooltipWrapper>
+
+                <TooltipWrapper content="Align Center">
+                  <Button
+                    variant={editor.isActive({ textAlign: "center" }) ? "secondary" : "ghost"}
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => editor.chain().focus().setTextAlign("center").run()}
+                  >
+                    <AlignCenter className="h-4 w-4" />
+                  </Button>
+                </TooltipWrapper>
+
+                <TooltipWrapper content="Align Right">
+                  <Button
+                    variant={editor.isActive({ textAlign: "right" }) ? "secondary" : "ghost"}
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => editor.chain().focus().setTextAlign("right").run()}
+                  >
+                    <AlignRight className="h-4 w-4" />
+                  </Button>
+                </TooltipWrapper>
+
+                <TooltipWrapper content="Align Justify">
+                  <Button
+                    variant={editor.isActive({ textAlign: "justify" }) ? "secondary" : "ghost"}
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => editor.chain().focus().setTextAlign("justify").run()}
+                  >
+                    <AlignJustify className="h-4 w-4" />
+                  </Button>
+                </TooltipWrapper>
 
                 <div className="w-px h-4 bg-border mx-1" />
 
                 {/* Lists */}
-                <Button
-                  variant={editor.isActive("bulletList") ? "secondary" : "ghost"}
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => editor.chain().focus().toggleBulletList().run()}
-                  title="Bullet List"
-                >
-                  <List className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant={editor.isActive("orderedList") ? "secondary" : "ghost"}
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => editor.chain().focus().toggleOrderedList().run()}
-                  title="Numbered List"
-                >
-                  <ListOrdered className="h-4 w-4" />
-                </Button>
+                <TooltipWrapper content="Bullet List">
+                  <Button
+                    variant={editor.isActive("bulletList") ? "secondary" : "ghost"}
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => editor.chain().focus().toggleBulletList().run()}
+                  >
+                    <List className="h-4 w-4" />
+                  </Button>
+                </TooltipWrapper>
+
+                <TooltipWrapper content="Numbered List">
+                  <Button
+                    variant={editor.isActive("orderedList") ? "secondary" : "ghost"}
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => editor.chain().focus().toggleOrderedList().run()}
+                  >
+                    <ListOrdered className="h-4 w-4" />
+                  </Button>
+                </TooltipWrapper>
 
                 <div className="w-px h-4 bg-border mx-1" />
 
                 {/* Table Dropdown */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-8 gap-1.5 text-xs font-semibold px-2 text-muted-foreground hover:text-foreground"
-                      title="Table Actions"
-                    >
-                      <TableIcon className="h-3.5 w-3.5" />
-                      <span>Table</span>
-                      <ChevronDown className="h-3 w-3 opacity-50" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-48">
-                    <DropdownMenuItem onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}>
-                      <Plus className="mr-2 h-3.5 w-3.5" /> Insert Table (3x3)
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem 
-                      disabled={!editor.isActive("table")}
-                      onClick={() => editor.chain().focus().addColumnAfter().run()}
-                    >
-                      Add Column After
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      disabled={!editor.isActive("table")}
-                      onClick={() => editor.chain().focus().addColumnBefore().run()}
-                    >
-                      Add Column Before
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      disabled={!editor.isActive("table")}
-                      onClick={() => editor.chain().focus().deleteColumn().run()}
-                    >
-                      <Trash2 className="mr-2 h-3.5 w-3.5 text-destructive" /> Delete Column
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem 
-                      disabled={!editor.isActive("table")}
-                      onClick={() => editor.chain().focus().addRowAfter().run()}
-                    >
-                      Add Row Below
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      disabled={!editor.isActive("table")}
-                      onClick={() => editor.chain().focus().addRowBefore().run()}
-                    >
-                      Add Row Above
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      disabled={!editor.isActive("table")}
-                      onClick={() => editor.chain().focus().deleteRow().run()}
-                    >
-                      <Trash2 className="mr-2 h-3.5 w-3.5 text-destructive" /> Delete Row
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem 
-                      disabled={!editor.isActive("table")}
-                      onClick={() => editor.chain().focus().deleteTable().run()}
-                      className="text-destructive focus:bg-destructive/10"
-                    >
-                      <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete Table
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <TooltipWrapper content="Table Actions">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 gap-1.5 text-xs font-semibold px-2 text-muted-foreground hover:text-foreground"
+                      >
+                        <TableIcon className="h-3.5 w-3.5" />
+                        <span>Table</span>
+                        <ChevronDown className="h-3 w-3 opacity-50" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-48">
+                      <DropdownMenuItem onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}>
+                        <Plus className="mr-2 h-3.5 w-3.5" /> Insert Table (3x3)
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem 
+                        disabled={!editor.isActive("table")}
+                        onClick={() => editor.chain().focus().addColumnAfter().run()}
+                      >
+                        Add Column After
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        disabled={!editor.isActive("table")}
+                        onClick={() => editor.chain().focus().addColumnBefore().run()}
+                      >
+                        Add Column Before
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        disabled={!editor.isActive("table")}
+                        onClick={() => editor.chain().focus().deleteColumn().run()}
+                      >
+                        <Trash2 className="mr-2 h-3.5 w-3.5 text-destructive" /> Delete Column
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem 
+                        disabled={!editor.isActive("table")}
+                        onClick={() => editor.chain().focus().addRowAfter().run()}
+                      >
+                        Add Row Below
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        disabled={!editor.isActive("table")}
+                        onClick={() => editor.chain().focus().addRowBefore().run()}
+                      >
+                        Add Row Above
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        disabled={!editor.isActive("table")}
+                        onClick={() => editor.chain().focus().deleteRow().run()}
+                      >
+                        <Trash2 className="mr-2 h-3.5 w-3.5 text-destructive" /> Delete Row
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem 
+                        disabled={!editor.isActive("table")}
+                        onClick={() => editor.chain().focus().deleteTable().run()}
+                        className="text-destructive focus:bg-destructive/10"
+                      >
+                        <Trash2 className="mr-2 h-3.5 w-3.5" /> Delete Table
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TooltipWrapper>
 
                 <div className="w-px h-4 bg-border mx-1" />
 
                 {/* Undo/Redo */}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => editor.chain().focus().undo().run()}
-                  disabled={!editor.can().chain().focus().undo().run()}
-                  title="Undo"
-                >
-                  <Undo className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => editor.chain().focus().redo().run()}
-                  disabled={!editor.can().chain().focus().redo().run()}
-                  title="Redo"
-                >
-                  <Redo className="h-4 w-4" />
-                </Button>
+                <TooltipWrapper content="Undo">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => editor.chain().focus().undo().run()}
+                    disabled={!editor.can().chain().focus().undo().run()}
+                  >
+                    <Undo className="h-4 w-4" />
+                  </Button>
+                </TooltipWrapper>
+
+                <TooltipWrapper content="Redo">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => editor.chain().focus().redo().run()}
+                    disabled={!editor.can().chain().focus().redo().run()}
+                  >
+                    <Redo className="h-4 w-4" />
+                  </Button>
+                </TooltipWrapper>
               </div>
 
               <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className={`h-8 gap-1.5 transition-all text-xs font-semibold ${
-                    !showInspector && activeSuggestionCount > 0 
-                      ? "border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 hover:bg-amber-100" 
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                  onClick={() => setShowInspector(!showInspector)}
-                  title="Toggle Suggestions & History Panel"
-                >
-                  <PanelRight className="h-3.5 w-3.5" />
-                  <span className="hidden xs:inline">
-                    {showInspector ? "Hide Panel" : "Show Panel"}
-                  </span>
+                <TooltipWrapper content="Toggle Suggestions & History Panel">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={`h-8 gap-1.5 transition-all text-xs font-semibold ${
+                      !showInspector && activeSuggestionCount > 0 
+                        ? "border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 hover:bg-amber-100" 
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                    onClick={() => setShowInspector(!showInspector)}
+                  >
+                    <PanelRight className="h-3.5 w-3.5" />
+                    <span className="hidden xs:inline">
+                      {showInspector ? "Hide Panel" : "Show Panel"}
+                    </span>
                   {activeSuggestionCount > 0 && (
                     <Badge 
                       variant="destructive" 
@@ -613,8 +684,9 @@ export default function DraftingDesk({
                     </Badge>
                   )}
                 </Button>
+              </TooltipWrapper>
 
-                <Button
+              <Button
                   size="sm"
                   className="h-8 gap-1 bg-indigo-600 hover:bg-indigo-700 text-white"
                   onClick={handleSave}
@@ -832,6 +904,7 @@ export default function DraftingDesk({
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </TooltipProvider>
   );
 }
