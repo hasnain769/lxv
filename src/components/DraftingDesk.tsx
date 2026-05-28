@@ -439,7 +439,7 @@ export default function DraftingDesk({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-10 w-10 shrink-0 text-muted-foreground hover:text-foreground lg:hidden mr-1"
+                  className="h-10 w-10 shrink-0 text-muted-foreground hover:text-foreground mr-1"
                   onClick={() => setShowInspector(false)}
                 >
                   <X className="h-4 w-4" />
