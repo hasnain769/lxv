@@ -34,6 +34,9 @@ export default function DraftingDesk({
   const [isSaving, setIsSaving] = useState(false);
   const [activeInspectorTab, setActiveInspectorTab] = useState("suggestions");
   const [viewingVersion, setViewingVersion] = useState<any | null>(null);
+  const [showInspector, setShowInspector] = useState(() => {
+    return typeof window !== "undefined" ? window.innerWidth >= 1280 : true;
+  });
 
   // Sync active document selection if changed from parent
   useEffect(() => {
@@ -249,21 +252,21 @@ export default function DraftingDesk({
   }
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-background">
+    <div className="flex flex-col h-full overflow-hidden bg-background relative">
       {/* Header */}
-      <div className="shrink-0 border-b border-border bg-slate-50/50 dark:bg-slate-900/50 p-4 flex items-center justify-between">
+      <div className="shrink-0 border-b border-border bg-slate-50/50 dark:bg-slate-900/50 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center">
+          <div className="w-9 h-9 rounded-lg bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center shrink-0">
             <FileText className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
           </div>
           <div>
-            <h2 className="font-bold text-foreground text-base">Drafting Desk</h2>
-            <p className="text-xs text-muted-foreground">Collaborate on legal documents</p>
+            <h2 className="font-bold text-foreground text-base leading-none">Drafting Desk</h2>
+            <p className="text-[10px] text-muted-foreground mt-0.5 hidden xs:block">Collaborate on legal documents</p>
           </div>
         </div>
         
         {/* Document Selector / Tabs */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth">
           {sharedDrafts.map((d: any) => (
             <Button
               key={d.document_name}
@@ -273,7 +276,7 @@ export default function DraftingDesk({
                 setActiveDoc(d.document_name);
                 setViewingVersion(null);
               }}
-              className="text-xs font-semibold h-8 capitalize"
+              className="text-xs font-semibold h-8 capitalize shrink-0"
             >
               {d.document_name.replace(/_/g, " ")}
               {activeDoc === d.document_name && (
@@ -283,20 +286,20 @@ export default function DraftingDesk({
               )}
             </Button>
           ))}
-          <Button variant="ghost" size="icon" onClick={onClose} className="ml-2 text-muted-foreground hover:text-foreground">
+          <Button variant="ghost" size="icon" onClick={onClose} className="ml-2 text-muted-foreground hover:text-foreground shrink-0">
             <X className="w-5 h-5" />
           </Button>
         </div>
       </div>
 
       {/* Main Split Layout */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden relative">
         {/* Left Side: Editor Area */}
         <div className="flex-1 flex flex-col overflow-hidden border-r border-border">
           {/* Editor Tool Bar */}
           {editor && (
-            <div className="shrink-0 border-b border-border bg-muted/40 p-2 flex items-center justify-between gap-1">
-              <div className="flex items-center gap-0.5">
+            <div className="shrink-0 border-b border-border bg-muted/40 p-2 flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-0.5 flex-wrap">
                 <Button
                   variant="ghost"
                   size="icon"
@@ -353,15 +356,43 @@ export default function DraftingDesk({
                 </Button>
               </div>
 
-              <Button
-                size="sm"
-                className="h-8 gap-1 bg-indigo-600 hover:bg-indigo-700 text-white"
-                onClick={handleSave}
-                disabled={isSaving}
-              >
-                <Save className="w-3.5 h-3.5" />
-                {isSaving ? "Saving..." : "Commit Version"}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={`h-8 gap-1.5 transition-all text-xs font-semibold ${
+                    !showInspector && activeSuggestionCount > 0 
+                      ? "border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400 hover:bg-amber-100" 
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                  onClick={() => setShowInspector(!showInspector)}
+                >
+                  <MessageSquare className="h-3.5 w-3.5" />
+                  <span className="hidden xs:inline">
+                    {showInspector ? "Hide Panel" : "Show Panel"}
+                  </span>
+                  {activeSuggestionCount > 0 && (
+                    <Badge 
+                      variant="destructive" 
+                      className={`h-4 min-w-4 px-1 flex items-center justify-center text-[10px] rounded-full font-bold ${
+                        showInspector ? "bg-muted-foreground" : "bg-red-500 animate-pulse text-white"
+                      }`}
+                    >
+                      {activeSuggestionCount}
+                    </Badge>
+                  )}
+                </Button>
+
+                <Button
+                  size="sm"
+                  className="h-8 gap-1 bg-indigo-600 hover:bg-indigo-700 text-white"
+                  onClick={handleSave}
+                  disabled={isSaving}
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  {isSaving ? "Saving..." : "Commit Version"}
+                </Button>
+              </div>
             </div>
           )}
 
@@ -381,29 +412,40 @@ export default function DraftingDesk({
         </div>
 
         {/* Right Side: Inspector Sidebar (Suggestions & History) */}
-        <div className="w-[320px] shrink-0 flex flex-col bg-slate-50/50 dark:bg-slate-900/30 overflow-hidden">
-          <Tabs value={activeInspectorTab} onValueChange={setActiveInspectorTab} className="flex-1 flex flex-col overflow-hidden">
-            <TabsList className="shrink-0 rounded-none bg-muted/40 border-b border-border h-12 p-0 flex">
-              <TabsTrigger
-                value="suggestions"
-                className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-indigo-600 data-[state=active]:bg-transparent h-full text-xs font-semibold"
-              >
-                <MessageSquare className="w-3.5 h-3.5 mr-1.5" />
-                Suggestions
-                {activeSuggestionCount > 0 && (
-                  <Badge variant="destructive" className="ml-1.5 h-4 px-1.5 text-[10px]">
-                    {activeSuggestionCount}
-                  </Badge>
-                )}
-              </TabsTrigger>
-              <TabsTrigger
-                value="history"
-                className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-indigo-600 data-[state=active]:bg-transparent h-full text-xs font-semibold"
-              >
-                <History className="w-3.5 h-3.5 mr-1.5" />
-                History
-              </TabsTrigger>
-            </TabsList>
+        {showInspector && (
+          <div className="absolute inset-y-0 right-0 z-30 w-[280px] sm:w-[320px] lg:relative lg:inset-auto lg:z-0 flex flex-col bg-background lg:bg-slate-50/50 dark:lg:bg-slate-900/30 overflow-hidden border-l border-border shadow-xl lg:shadow-none animate-in slide-in-from-right duration-200">
+            <Tabs value={activeInspectorTab} onValueChange={setActiveInspectorTab} className="flex-1 flex flex-col overflow-hidden">
+              <TabsList className="shrink-0 rounded-none bg-muted/40 border-b border-border h-12 p-0 flex items-center justify-between">
+                <div className="flex flex-1 h-full">
+                  <TabsTrigger
+                    value="suggestions"
+                    className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-indigo-600 data-[state=active]:bg-transparent h-full text-xs font-semibold"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5 mr-1.5" />
+                    Suggestions
+                    {activeSuggestionCount > 0 && (
+                      <Badge variant="destructive" className="ml-1.5 h-4 px-1.5 text-[10px]">
+                        {activeSuggestionCount}
+                      </Badge>
+                    )}
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="history"
+                    className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-indigo-600 data-[state=active]:bg-transparent h-full text-xs font-semibold"
+                  >
+                    <History className="w-3.5 h-3.5 mr-1.5" />
+                    History
+                  </TabsTrigger>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-10 w-10 shrink-0 text-muted-foreground hover:text-foreground lg:hidden mr-1"
+                  onClick={() => setShowInspector(false)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </TabsList>
 
             {/* Suggestions Tab Content */}
             <TabsContent value="suggestions" className="flex-1 m-0 overflow-hidden flex flex-col">
@@ -526,14 +568,15 @@ export default function DraftingDesk({
                 )}
               </ScrollArea>
             </TabsContent>
-          </Tabs>
-        </div>
+            </Tabs>
+          </div>
+        )}
       </div>
 
       {/* Read-only History Viewer Overlay */}
       {viewingVersion && (
         <div className="absolute inset-0 bg-slate-950/30 dark:bg-slate-950/60 backdrop-blur-sm z-50 flex justify-end">
-          <div className="w-[500px] h-full bg-background border-l border-border shadow-2xl flex flex-col animate-in slide-in-from-right duration-200">
+          <div className="w-full sm:w-[500px] h-full bg-background border-l border-border shadow-2xl flex flex-col animate-in slide-in-from-right duration-200">
             <div className="p-4 border-b border-border bg-slate-50 dark:bg-slate-900/50 flex items-center justify-between">
               <div>
                 <h3 className="font-bold text-sm">Historical Snapshot Viewer</h3>
