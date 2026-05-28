@@ -4,7 +4,8 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { 
   X, Save, MessageSquare, History, Check, Play, Undo, Redo, Bold, Italic, 
-  List, ListOrdered, FileText, Sparkles, CheckCircle2, ChevronRight, Lock, AlertCircle 
+  List, ListOrdered, FileText, Sparkles, CheckCircle2, ChevronRight, Lock, AlertCircle,
+  PanelRight
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -34,9 +35,7 @@ export default function DraftingDesk({
   const [isSaving, setIsSaving] = useState(false);
   const [activeInspectorTab, setActiveInspectorTab] = useState("suggestions");
   const [viewingVersion, setViewingVersion] = useState<any | null>(null);
-  const [showInspector, setShowInspector] = useState(() => {
-    return typeof window !== "undefined" ? window.innerWidth >= 1280 : true;
-  });
+  const [showInspector, setShowInspector] = useState(false);
 
   // Sync active document selection if changed from parent
   useEffect(() => {
@@ -367,7 +366,7 @@ export default function DraftingDesk({
                   }`}
                   onClick={() => setShowInspector(!showInspector)}
                 >
-                  <MessageSquare className="h-3.5 w-3.5" />
+                  <PanelRight className="h-3.5 w-3.5" />
                   <span className="hidden xs:inline">
                     {showInspector ? "Hide Panel" : "Show Panel"}
                   </span>
