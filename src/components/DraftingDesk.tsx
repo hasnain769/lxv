@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { diffWords } from "diff";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -70,6 +71,7 @@ export default function DraftingDesk({
   const [isSaving, setIsSaving] = useState(false);
   const [activeInspectorTab, setActiveInspectorTab] = useState("suggestions");
   const [viewingVersion, setViewingVersion] = useState<any | null>(null);
+  const [diffMode, setDiffMode] = useState<"redline" | "full">("redline");
   const [showInspector, setShowInspector] = useState(false);
 
   // Sync active document selection if changed from parent
@@ -297,6 +299,44 @@ export default function DraftingDesk({
       console.error(e);
       toast.error("Failed to resolve suggestion");
     }
+  };
+
+  const renderRedlineDiff = () => {
+    if (!viewingVersion || !editor) return null;
+    
+    const oldText = viewingVersion.content_text || "";
+    const newText = editor.getText() || "";
+    
+    // Calculate word-level difference
+    const changes = diffWords(oldText, newText);
+    
+    return (
+      <div className="max-w-prose mx-auto font-serif text-sm leading-relaxed whitespace-pre-wrap select-text dark:text-slate-300">
+        {changes.map((change, index) => {
+          if (change.added) {
+            return (
+              <span 
+                key={index} 
+                className="bg-green-100 dark:bg-green-950/40 text-green-800 dark:text-green-300 underline font-medium px-0.5 rounded"
+              >
+                {change.value}
+              </span>
+            );
+          }
+          if (change.removed) {
+            return (
+              <span 
+                key={index} 
+                className="bg-red-100 dark:bg-red-950/40 text-red-800 dark:text-red-400 line-through font-medium opacity-70 px-0.5 rounded"
+              >
+                {change.value}
+              </span>
+            );
+          }
+          return <span key={index}>{change.value}</span>;
+        })}
+      </div>
+    );
   };
 
   const activeSuggestionCount = suggestions.filter((s: any) => s.status === "pending").length;
@@ -889,11 +929,35 @@ export default function DraftingDesk({
                 <X className="w-5 h-5" />
               </Button>
             </div>
+
+            {/* Diff Mode Toggle Tabs */}
+            <div className="shrink-0 flex border-b border-border bg-slate-50/50 dark:bg-slate-900/30 p-2 gap-2">
+              <Button
+                variant={diffMode === "redline" ? "default" : "outline"}
+                size="sm"
+                className="text-xs h-8 px-3 font-semibold"
+                onClick={() => setDiffMode("redline")}
+              >
+                Redline (Diff)
+              </Button>
+              <Button
+                variant={diffMode === "full" ? "default" : "outline"}
+                size="sm"
+                className="text-xs h-8 px-3 font-semibold"
+                onClick={() => setDiffMode("full")}
+              >
+                Full Text
+              </Button>
+            </div>
             
             <ScrollArea className="flex-1 p-6">
-              <div className="max-w-prose mx-auto prose prose-sm dark:prose-invert font-serif whitespace-pre-wrap leading-relaxed">
-                {viewingVersion.content_text}
-              </div>
+              {diffMode === "redline" ? (
+                renderRedlineDiff()
+              ) : (
+                <div className="max-w-prose mx-auto prose prose-sm dark:prose-invert font-serif whitespace-pre-wrap leading-relaxed">
+                  {viewingVersion.content_text}
+                </div>
+              )}
             </ScrollArea>
 
             <div className="p-4 border-t border-border bg-slate-50 dark:bg-slate-900/50 flex justify-end">
