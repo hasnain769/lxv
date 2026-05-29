@@ -251,4 +251,38 @@
   color: hsl(var(--foreground)) !important;
 }
 
+/* ============================================================
+   Track Changes — inline marks rendered by Tiptap custom marks
+   .tc-insert = green underline (addition)
+   .tc-delete = red strikethrough (deletion, kept in doc until accepted)
+   ============================================================ */
+.tc-insert {
+  background-color: #d1fae5;
+  color: #065f46;
+  text-decoration: underline;
+  text-decoration-color: #10b981;
+  border-radius: 2px;
+  padding: 0 2px;
+}
 
+.dark .tc-insert {
+  background-color: rgb(6 78 59 / 0.45);
+  color: #34d399;
+  text-decoration-color: #34d399;
+}
+
+.tc-delete {
+  background-color: #fee2e2;
+  color: #991b1b;
+  text-decoration: line-through;
+  text-decoration-color: #ef4444;
+  border-radius: 2px;
+  padding: 0 2px;
+  opacity: 0.85;
+}
+
+.dark .tc-delete {
+  background-color: rgb(153 27 27 / 0.4);
+  color: #fca5a5;
+  text-decoration-color: #f87171;
+}

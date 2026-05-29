@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { Mark } from "@tiptap/core";
+import { TextSelection } from "@tiptap/pm/state";
 import { diffLines } from "diff";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEditor, EditorContent } from "@tiptap/react";
@@ -10,9 +12,33 @@ import { Table } from "@tiptap/extension-table";
 import { TableRow } from "@tiptap/extension-table-row";
 import { TableHeader } from "@tiptap/extension-table-header";
 import { TableCell } from "@tiptap/extension-table-cell";
+
+// Custom Tiptap marks for inline Track Changes — completely separate from the
+// document's own formatting marks so they never conflict or get saved accidentally.
+const TrackInsertMark = Mark.create({
+  name: "trackInsert",
+  inclusive: true,  // new text typed inside an insert span inherits the mark
+  renderHTML() {
+    return ["span", { class: "tc-insert" }, 0];
+  },
+  parseHTML() {
+    return [{ tag: "span.tc-insert" }];
+  },
+});
+
+const TrackDeleteMark = Mark.create({
+  name: "trackDelete",
+  inclusive: false, // text typed next to a deleted span is NOT marked deleted
+  renderHTML() {
+    return ["span", { class: "tc-delete" }, 0];
+  },
+  parseHTML() {
+    return [{ tag: "span.tc-delete" }];
+  },
+});
 import { 
   X, Save, MessageSquare, History, Check, Play, Undo, Redo, Bold, Italic, 
-  List, ListOrdered, FileText, Sparkles, CheckCircle2, ChevronRight, Lock, AlertCircle, Info, AlertTriangle,
+  List, ListOrdered, FileText, Sparkles, CheckCircle2, ChevronRight, Lock, AlertCircle, Info, AlertTriangle, Eye, EyeOff,
   PanelRight, Underline as UnderlineIcon, Strikethrough, Highlighter, AlignLeft, AlignCenter,
   AlignRight, AlignJustify, Table as TableIcon, Heading, Plus, Trash2, ChevronDown
 } from "lucide-react";
@@ -75,6 +101,7 @@ export default function DraftingDesk({
   const [diffBaseVersionId, setDiffBaseVersionId] = useState<number | string>("none");
   const [diffCompareVersionId, setDiffCompareVersionId] = useState<number | string>("current");
   const [showInspector, setShowInspector] = useState(false);
+  const [trackChanges, setTrackChanges] = useState(false);
 
   // Sync active document selection if changed from parent
   useEffect(() => {
@@ -134,18 +161,14 @@ export default function DraftingDesk({
     extensions: [
       StarterKit,
       Underline,
-      TextAlign.configure({
-        types: ["heading", "paragraph"],
-      }),
-      Highlight.configure({
-        multicolor: true,
-      }),
-      Table.configure({
-        resizable: true,
-      }),
+      TextAlign.configure({ types: ["heading", "paragraph"] }),
+      Highlight.configure({ multicolor: true }),
+      Table.configure({ resizable: true }),
       TableRow,
       TableHeader,
       TableCell,
+      TrackInsertMark,
+      TrackDeleteMark,
     ],
     content: "",
     editorProps: {
@@ -155,6 +178,94 @@ export default function DraftingDesk({
     },
   });
 
+  // Wire/unwire track-changes key handlers whenever TC mode toggles
+  useEffect(() => {
+    if (!editor) return;
+    editor.setOptions({
+      editorProps: {
+        attributes: {
+          class: "prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[400px] font-sans p-4",
+        },
+        handleTextInput(view, from, to, text) {
+          if (!trackChanges) return false;
+          const { state, dispatch } = view;
+          const trackInsertType = state.schema.marks.trackInsert;
+          if (!trackInsertType) return false;
+          const tr = state.tr.insertText(text, from, to);
+          tr.addMark(from, from + text.length, trackInsertType.create());
+          dispatch(tr);
+          return true;
+        },
+        handleKeyDown(view, event) {
+          if (!trackChanges) return false;
+          if (event.key !== "Backspace" && event.key !== "Delete") return false;
+
+          const { state, dispatch } = view;
+          const { selection } = state;
+          const trackInsertType = state.schema.marks.trackInsert;
+          const trackDeleteType = state.schema.marks.trackDelete;
+          if (!trackInsertType || !trackDeleteType) return false;
+
+          if (!selection.empty) {
+            // Selection: if it's all freshly inserted text, let normal delete run
+            let allInserted = true;
+            state.doc.nodesBetween(selection.from, selection.to, (node) => {
+              if (node.isText && !node.marks.some(m => m.type === trackInsertType)) {
+                allInserted = false;
+              }
+            });
+            if (allInserted) return false;
+
+            // Mark selection as deleted (keep text, just redline it)
+            const tr = state.tr;
+            tr.removeMark(selection.from, selection.to, trackInsertType);
+            tr.addMark(selection.from, selection.to, trackDeleteType.create());
+            tr.setSelection(TextSelection.create(tr.doc, selection.to));
+            dispatch(tr);
+            return true;
+          }
+
+          const pos = selection.from;
+
+          if (event.key === "Backspace" && pos > 1) {
+            // If char before cursor was just inserted, allow normal delete
+            if (state.doc.rangeHasMark(pos - 1, pos, trackInsertType)) return false;
+            // If already marked deleted, just skip over it (move cursor left)
+            if (state.doc.rangeHasMark(pos - 1, pos, trackDeleteType)) {
+              const tr = state.tr;
+              tr.setSelection(TextSelection.create(tr.doc, pos - 1));
+              dispatch(tr);
+              return true;
+            }
+            // Original text — keep it but mark deleted
+            const tr = state.tr;
+            tr.addMark(pos - 1, pos, trackDeleteType.create());
+            tr.setSelection(TextSelection.create(tr.doc, pos - 1));
+            dispatch(tr);
+            return true;
+          }
+
+          if (event.key === "Delete" && pos < state.doc.content.size) {
+            if (state.doc.rangeHasMark(pos, pos + 1, trackInsertType)) return false;
+            if (state.doc.rangeHasMark(pos, pos + 1, trackDeleteType)) {
+              const tr = state.tr;
+              tr.setSelection(TextSelection.create(tr.doc, pos + 1));
+              dispatch(tr);
+              return true;
+            }
+            const tr = state.tr;
+            tr.addMark(pos, pos + 1, trackDeleteType.create());
+            tr.setSelection(TextSelection.create(tr.doc, pos + 1));
+            dispatch(tr);
+            return true;
+          }
+
+          return false;
+        },
+      },
+    });
+  }, [editor, trackChanges]);
+
   const getActiveFormatLabel = () => {
     if (!editor) return "Normal";
     if (editor.isActive("heading", { level: 1 })) return "Heading 1";
@@ -163,23 +274,21 @@ export default function DraftingDesk({
     return "Normal";
   };
 
-  // Update editor content when draft loads
+  // Update editor content when draft loads - always reset TC cleanly
   useEffect(() => {
     if (editor && draft) {
+      setTrackChanges(false);
       try {
         const parsed = JSON.parse(draft.content_json);
-        
-        // Self-healing check: if the content has only one block with newlines,
-        // split it into proper paragraph nodes so that formatting works line-by-line.
         if (
-          parsed && 
-          parsed.type === "doc" && 
-          parsed.content && 
-          parsed.content.length === 1 && 
-          parsed.content[0].type === "paragraph" && 
-          parsed.content[0].content && 
-          parsed.content[0].content[0] && 
-          parsed.content[0].content[0].text && 
+          parsed &&
+          parsed.type === "doc" &&
+          parsed.content &&
+          parsed.content.length === 1 &&
+          parsed.content[0].type === "paragraph" &&
+          parsed.content[0].content &&
+          parsed.content[0].content[0] &&
+          parsed.content[0].content[0].text &&
           parsed.content[0].content[0].text.includes("\n")
         ) {
           const fullText = parsed.content[0].content[0].text;
@@ -191,18 +300,84 @@ export default function DraftingDesk({
         } else {
           editor.commands.setContent(parsed);
         }
-      } catch (e) {
+      } catch {
         const htmlContent = (draft.content_text || "")
           .split("\n")
           .map((line: string) => line.trim() ? `<p>${line}</p>` : "<p></p>")
           .join("");
         editor.commands.setContent(htmlContent);
       }
+      // Strip ALL legacy/leftover TC marks (highlight, strike, trackInsert, trackDelete)
+      setTimeout(() => {
+        if (!editor) return;
+        const { state, dispatch } = editor.view;
+        const { tr, doc } = state;
+        const toStrip = ["highlight", "strike", "trackInsert", "trackDelete"]
+          .map(name => state.schema.marks[name])
+          .filter(Boolean);
+        let changed = false;
+        doc.descendants((node, pos) => {
+          if (!node.isText) return;
+          toStrip.forEach(markType => {
+            if (node.marks.some(m => m.type === markType)) {
+              tr.removeMark(pos, pos + node.nodeSize, markType);
+              changed = true;
+            }
+          });
+        });
+        if (changed) dispatch(tr);
+      }, 50);
     }
   }, [editor, draft]);
 
+  /**
+   * Strip all trackInsert and trackDelete marks before saving.
+   * trackInsert: keep the text (it was added intentionally), just remove the mark.
+   * trackDelete: remove the text entirely (user marked it as deleted).
+   * Call this before saving to DB, and when turning TC off.
+   */
+  const stripTcMarks = () => {
+    if (!editor) return;
+    const { state, dispatch } = editor.view;
+    const trackInsertType = state.schema.marks.trackInsert;
+    const trackDeleteType = state.schema.marks.trackDelete;
+    if (!trackInsertType || !trackDeleteType) return;
+
+    // Collect ranges of tc-delete text that need to be removed from the document
+    const deleteRanges: Array<{ from: number; to: number }> = [];
+    state.doc.descendants((node, pos) => {
+      if (node.isText && node.marks.some(m => m.type === trackDeleteType)) {
+        const last = deleteRanges[deleteRanges.length - 1];
+        // Merge with adjacent range
+        if (last && last.to === pos) {
+          last.to = pos + node.nodeSize;
+        } else {
+          deleteRanges.push({ from: pos, to: pos + node.nodeSize });
+        }
+      }
+    });
+
+    // Step 1: Remove all TC marks (keep text as-is for now)
+    const tr1 = state.tr;
+    tr1.removeMark(0, state.doc.content.size, trackInsertType);
+    tr1.removeMark(0, state.doc.content.size, trackDeleteType);
+    dispatch(tr1);
+
+    // Step 2: Delete the tc-delete text ranges (in reverse to preserve positions)
+    if (deleteRanges.length > 0) {
+      const { state: s2, dispatch: d2 } = editor.view;
+      const tr2 = s2.tr;
+      for (let i = deleteRanges.length - 1; i >= 0; i--) {
+        tr2.delete(deleteRanges[i].from, deleteRanges[i].to);
+      }
+      d2(tr2);
+    }
+  };
+
   const handleSave = async () => {
     if (!editor) return;
+    // Strip TC marks so clean content is saved to DB
+    if (trackChanges) stripTcMarks();
     setIsSaving(true);
     try {
       const token = await getAccessTokenSilently();
@@ -220,7 +395,8 @@ export default function DraftingDesk({
       });
       if (!res.ok) throw new Error("Failed to save draft");
       const updated = await res.json();
-      toast.success(`Draft committed successfully as Version ${updated.version_id}`);
+      setTrackChanges(false);
+      toast.success(`Draft committed as Version ${updated.version_id}`);
       refetchDraft();
       refetchVersions();
     } catch (e) {
@@ -313,6 +489,8 @@ export default function DraftingDesk({
     const ver = versions.find((v: any) => v.version_id === Number(verId));
     return ver ? ver.content_text || "" : "";
   };
+
+  // (getTrackChangesHtml removed — inline marks are now used instead of a diff panel)
 
   const renderRedlineDiff = () => {
     if (!viewingVersion || !editor) return null;
@@ -758,37 +936,50 @@ export default function DraftingDesk({
                 </Button>
               </TooltipWrapper>
 
-              <TooltipWrapper content="View unsaved changes since last commit">
+              <TooltipWrapper content="Toggle real-time Track Changes (highlights additions in green and deletions in red)">
                 <Button
-                  variant="outline"
+                  variant={trackChanges ? "default" : "outline"}
                   size="sm"
-                  className="h-8 gap-1 text-xs border-indigo-100 dark:border-indigo-950 bg-indigo-50/30 dark:bg-indigo-950/10 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-100/50"
+                  className={`h-8 gap-1.5 text-xs transition-all ${
+                    trackChanges 
+                      ? "bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-sm" 
+                      : "border-indigo-100 dark:border-indigo-950 bg-indigo-50/30 dark:bg-indigo-950/10 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-100/50"
+                  }`}
                   onClick={() => {
-                    setViewingVersion({
-                      version_id: draft?.version_id || 1,
-                      content_text: draft?.content_text || "",
-                      isCurrentWorkspaceDiff: true
-                    });
-                    setDiffBaseVersionId(draft?.version_id || "none");
-                    setDiffCompareVersionId("current");
-                    setDiffMode("redline");
+                    if (trackChanges) {
+                      // Turn OFF — accept all tracked changes (strip marks, delete red text)
+                      stripTcMarks();
+                      setTrackChanges(false);
+                      toast.success("Track Changes OFF — changes accepted");
+                    } else {
+                      setTrackChanges(true);
+                      toast.success("Track Changes ON — type to add (green), delete to redline");
+                    }
                   }}
                   disabled={loadingDraft || isSaving}
                 >
-                  <FileText className="w-3.5 h-3.5" />
-                  View Diff
+                  {trackChanges ? (
+                    <Eye className="w-3.5 h-3.5 animate-pulse" />
+                  ) : (
+                    <EyeOff className="w-3.5 h-3.5" />
+                  )}
+                  Track Changes {trackChanges ? "ON" : "OFF"}
                 </Button>
               </TooltipWrapper>
 
-              <Button
-                  size="sm"
-                  className="h-8 gap-1 bg-indigo-600 hover:bg-indigo-700 text-white"
-                  onClick={handleSave}
-                  disabled={isSaving}
-                >
-                  <Save className="w-3.5 h-3.5" />
-                  {isSaving ? "Saving..." : "Commit Version"}
-                </Button>
+              <TooltipWrapper content="Commit current workspace as a new version">
+                <span>
+                  <Button
+                    size="sm"
+                    className="h-8 gap-1 bg-indigo-600 hover:bg-indigo-700 text-white"
+                    onClick={handleSave}
+                    disabled={isSaving || loadingDraft}
+                  >
+                    <Save className="w-3.5 h-3.5" />
+                    {isSaving ? "Saving..." : "Commit Version"}
+                  </Button>
+                </span>
+              </TooltipWrapper>
               </div>
             </div>
           )}
@@ -802,7 +993,21 @@ export default function DraftingDesk({
               </div>
             ) : (
               <div className="max-w-2xl mx-auto py-6 px-4">
+
+                {/* Track Changes active banner */}
+                {trackChanges && (
+                  <div className="mb-3 flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 select-none">
+                    <Eye className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0 animate-pulse" />
+                    <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">Track Changes Active</span>
+                    <span className="text-[10px] text-emerald-600/60 dark:text-emerald-500/60">
+                      — type to add&nbsp;<span className="tc-insert" style={{fontSize:"10px",padding:"0 3px"}}>green</span>, delete to redline&nbsp;<span className="tc-delete" style={{fontSize:"10px",padding:"0 3px"}}>red</span>
+                    </span>
+                  </div>
+                )}
+
+                {/* Editor — always fully editable, inline TC marks shown directly inside */}
                 <EditorContent editor={editor} />
+
               </div>
             )}
           </ScrollArea>
