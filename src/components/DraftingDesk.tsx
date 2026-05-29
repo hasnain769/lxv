@@ -72,6 +72,8 @@ export default function DraftingDesk({
   const [activeInspectorTab, setActiveInspectorTab] = useState("suggestions");
   const [viewingVersion, setViewingVersion] = useState<any | null>(null);
   const [diffMode, setDiffMode] = useState<"redline" | "full">("redline");
+  const [diffBaseVersionId, setDiffBaseVersionId] = useState<number | string>("none");
+  const [diffCompareVersionId, setDiffCompareVersionId] = useState<number | string>("current");
   const [showInspector, setShowInspector] = useState(false);
 
   // Sync active document selection if changed from parent
@@ -301,21 +303,22 @@ export default function DraftingDesk({
     }
   };
 
+  const getVersionText = (verId: number | string) => {
+    if (verId === "current") {
+      return editor?.getText() || "";
+    }
+    if (verId === "none" || !verId) {
+      return "";
+    }
+    const ver = versions.find((v: any) => v.version_id === Number(verId));
+    return ver ? ver.content_text || "" : "";
+  };
+
   const renderRedlineDiff = () => {
     if (!viewingVersion || !editor) return null;
     
-    let oldText = "";
-    let newText = "";
-    
-    if (viewingVersion.isCurrentWorkspaceDiff) {
-      oldText = draft?.content_text || "";
-      newText = editor.getText() || "";
-    } else {
-      // Find the version immediately preceding viewingVersion
-      const prevVer = versions.find((ver: any) => ver.version_id === viewingVersion.version_id - 1);
-      oldText = prevVer ? prevVer.content_text : "";
-      newText = viewingVersion.content_text || "";
-    }
+    const oldText = getVersionText(diffBaseVersionId);
+    const newText = getVersionText(diffCompareVersionId);
 
     const parts = diffLines(oldText, newText);
     const renderedLines: React.ReactNode[] = [];
@@ -332,10 +335,10 @@ export default function DraftingDesk({
         let prefix = " ";
         
         if (part.added) {
-          className += "bg-green-50/50 dark:bg-green-950/20 text-green-700 dark:text-green-300 border-l-4 border-green-500 font-semibold";
+          className += "bg-green-100/70 dark:bg-green-950/40 text-green-900 dark:text-green-300 border-l-4 border-green-600 font-medium";
           prefix = "+";
         } else if (part.removed) {
-          className += "bg-red-50/50 dark:bg-red-950/20 text-red-600 dark:text-red-400 line-through border-l-4 border-red-500 font-semibold opacity-70";
+          className += "bg-red-100/70 dark:bg-red-950/40 text-red-900 dark:text-red-300 line-through border-l-4 border-red-600 font-medium opacity-80";
           prefix = "-";
         } else {
           className += "text-slate-600 dark:text-slate-400 border-l-4 border-transparent";
@@ -355,7 +358,7 @@ export default function DraftingDesk({
       <div className="border border-border rounded-lg overflow-hidden bg-slate-50/50 dark:bg-slate-950/20 py-2 divide-y divide-slate-100 dark:divide-slate-900/50">
         {renderedLines.length === 0 ? (
           <div className="text-center p-8 text-muted-foreground text-xs font-sans">
-            No changes in this version.
+            No changes between the selected versions.
           </div>
         ) : (
           renderedLines
@@ -762,6 +765,8 @@ export default function DraftingDesk({
                       content_text: draft?.content_text || "",
                       isCurrentWorkspaceDiff: true
                     });
+                    setDiffBaseVersionId(draft?.version_id || "none");
+                    setDiffCompareVersionId("current");
                     setDiffMode("redline");
                   }}
                   disabled={loadingDraft || isSaving}
@@ -936,6 +941,8 @@ export default function DraftingDesk({
                         key={v.id}
                         onClick={() => {
                           setViewingVersion(v);
+                          setDiffBaseVersionId(v.version_id > 1 ? v.version_id - 1 : "none");
+                          setDiffCompareVersionId(v.version_id);
                           setDiffMode("redline");
                         }}
                         className={`border rounded-lg p-3 bg-card shadow-sm cursor-pointer hover:border-indigo-300 dark:hover:border-indigo-800 transition-colors flex flex-col gap-1.5 ${
@@ -961,6 +968,8 @@ export default function DraftingDesk({
                             onClick={(e) => {
                               e.stopPropagation();
                               setViewingVersion(v);
+                              setDiffBaseVersionId(v.version_id > 1 ? v.version_id - 1 : "none");
+                              setDiffCompareVersionId(v.version_id);
                               setDiffMode("redline");
                             }}
                           >
@@ -973,6 +982,8 @@ export default function DraftingDesk({
                             onClick={(e) => {
                               e.stopPropagation();
                               setViewingVersion(v);
+                              setDiffBaseVersionId(v.version_id > 1 ? v.version_id - 1 : "none");
+                              setDiffCompareVersionId(v.version_id);
                               setDiffMode("full");
                             }}
                           >
@@ -1012,24 +1023,71 @@ export default function DraftingDesk({
               </Button>
             </div>
 
-            {/* Diff Mode Toggle Tabs */}
-            <div className="shrink-0 flex border-b border-border bg-slate-50/50 dark:bg-slate-900/30 p-2 gap-2">
-              <Button
-                variant={diffMode === "redline" ? "default" : "outline"}
-                size="sm"
-                className="text-xs h-8 px-3 font-semibold"
-                onClick={() => setDiffMode("redline")}
-              >
-                Redline (Diff)
-              </Button>
-              <Button
-                variant={diffMode === "full" ? "default" : "outline"}
-                size="sm"
-                className="text-xs h-8 px-3 font-semibold"
-                onClick={() => setDiffMode("full")}
-              >
-                Full Text
-              </Button>
+            {/* Diff Selector & Mode Toggle Header */}
+            <div className="shrink-0 flex flex-col gap-2 p-3 border-b border-border bg-slate-50/50 dark:bg-slate-900/30">
+              <div className="flex items-center gap-1.5 text-[11px]">
+                <div className="flex-1 flex flex-col gap-0.5">
+                  <span className="text-[10px] text-muted-foreground font-semibold">Compare Base:</span>
+                  <select
+                    value={diffBaseVersionId}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setDiffBaseVersionId(val === "none" ? "none" : val === "current" ? "current" : Number(val));
+                    }}
+                    className="w-full bg-background border border-border rounded px-2 py-1 outline-none text-foreground focus:border-indigo-500 font-medium"
+                  >
+                    <option value="none">Empty Document (None)</option>
+                    <option value="current">Current Editor Draft</option>
+                    {versions.map((ver: any) => (
+                      <option key={ver.id} value={ver.version_id}>
+                        Version {ver.version_id}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                <span className="text-muted-foreground font-bold pt-4">→</span>
+                
+                <div className="flex-1 flex flex-col gap-0.5">
+                  <span className="text-[10px] text-muted-foreground font-semibold">Compare Target:</span>
+                  <select
+                    value={diffCompareVersionId}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setDiffCompareVersionId(val === "none" ? "none" : val === "current" ? "current" : Number(val));
+                    }}
+                    className="w-full bg-background border border-border rounded px-2 py-1 outline-none text-foreground focus:border-indigo-500 font-medium"
+                  >
+                    <option value="current">Current Editor Draft</option>
+                    {versions.map((ver: any) => (
+                      <option key={ver.id} value={ver.version_id}>
+                        Version {ver.version_id}
+                      </option>
+                    ))}
+                    <option value="none">Empty Document (None)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Diff Mode Toggle Tabs */}
+              <div className="flex gap-2 mt-1">
+                <Button
+                  variant={diffMode === "redline" ? "default" : "outline"}
+                  size="sm"
+                  className="text-xs h-7 px-3 font-semibold flex-1"
+                  onClick={() => setDiffMode("redline")}
+                >
+                  Redline (Diff)
+                </Button>
+                <Button
+                  variant={diffMode === "full" ? "default" : "outline"}
+                  size="sm"
+                  className="text-xs h-7 px-3 font-semibold flex-1"
+                  onClick={() => setDiffMode("full")}
+                >
+                  Full Text
+                </Button>
+              </div>
             </div>
             
             <ScrollArea className="flex-1 p-6">
@@ -1037,7 +1095,7 @@ export default function DraftingDesk({
                 renderRedlineDiff()
               ) : (
                 <div className="max-w-prose mx-auto prose prose-sm dark:prose-invert font-serif whitespace-pre-wrap leading-relaxed">
-                  {viewingVersion.content_text}
+                  {getVersionText(diffCompareVersionId)}
                 </div>
               )}
             </ScrollArea>
