@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { diffWords } from "diff";
+import { diffLines } from "diff";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -304,37 +304,62 @@ export default function DraftingDesk({
   const renderRedlineDiff = () => {
     if (!viewingVersion || !editor) return null;
     
-    const oldText = viewingVersion.content_text || "";
-    const newText = editor.getText() || "";
+    let oldText = "";
+    let newText = "";
     
-    // Calculate word-level difference
-    const changes = diffWords(oldText, newText);
-    
+    if (viewingVersion.isCurrentWorkspaceDiff) {
+      oldText = draft?.content_text || "";
+      newText = editor.getText() || "";
+    } else {
+      // Find the version immediately preceding viewingVersion
+      const prevVer = versions.find((ver: any) => ver.version_id === viewingVersion.version_id - 1);
+      oldText = prevVer ? prevVer.content_text : "";
+      newText = viewingVersion.content_text || "";
+    }
+
+    const parts = diffLines(oldText, newText);
+    const renderedLines: React.ReactNode[] = [];
+    let keyCounter = 0;
+
+    parts.forEach((part) => {
+      const lines = part.value.split("\n");
+      if (lines.length > 1 && lines[lines.length - 1] === "") {
+        lines.pop();
+      }
+
+      lines.forEach((line) => {
+        let className = "font-mono text-[11px] leading-relaxed py-0.5 px-3 whitespace-pre-wrap flex items-start gap-2 ";
+        let prefix = " ";
+        
+        if (part.added) {
+          className += "bg-green-50/50 dark:bg-green-950/20 text-green-700 dark:text-green-300 border-l-4 border-green-500 font-semibold";
+          prefix = "+";
+        } else if (part.removed) {
+          className += "bg-red-50/50 dark:bg-red-950/20 text-red-600 dark:text-red-400 line-through border-l-4 border-red-500 font-semibold opacity-70";
+          prefix = "-";
+        } else {
+          className += "text-slate-600 dark:text-slate-400 border-l-4 border-transparent";
+          prefix = " ";
+        }
+
+        renderedLines.push(
+          <div key={keyCounter++} className={className}>
+            <span className="select-none w-3 opacity-60 font-bold shrink-0">{prefix}</span>
+            <span className="flex-1">{line || " "}</span>
+          </div>
+        );
+      });
+    });
+
     return (
-      <div className="max-w-prose mx-auto font-serif text-sm leading-relaxed whitespace-pre-wrap select-text dark:text-slate-300">
-        {changes.map((change, index) => {
-          if (change.added) {
-            return (
-              <span 
-                key={index} 
-                className="bg-green-100 dark:bg-green-950/40 text-green-800 dark:text-green-300 underline font-medium px-0.5 rounded"
-              >
-                {change.value}
-              </span>
-            );
-          }
-          if (change.removed) {
-            return (
-              <span 
-                key={index} 
-                className="bg-red-100 dark:bg-red-950/40 text-red-800 dark:text-red-400 line-through font-medium opacity-70 px-0.5 rounded"
-              >
-                {change.value}
-              </span>
-            );
-          }
-          return <span key={index}>{change.value}</span>;
-        })}
+      <div className="border border-border rounded-lg overflow-hidden bg-slate-50/50 dark:bg-slate-950/20 py-2 divide-y divide-slate-100 dark:divide-slate-900/50">
+        {renderedLines.length === 0 ? (
+          <div className="text-center p-8 text-muted-foreground text-xs font-sans">
+            No changes in this version.
+          </div>
+        ) : (
+          renderedLines
+        )}
       </div>
     );
   };
@@ -726,6 +751,26 @@ export default function DraftingDesk({
                 </Button>
               </TooltipWrapper>
 
+              <TooltipWrapper content="View unsaved changes since last commit">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 gap-1 text-xs border-indigo-100 dark:border-indigo-950 bg-indigo-50/30 dark:bg-indigo-950/10 text-indigo-700 dark:text-indigo-400 hover:bg-indigo-100/50"
+                  onClick={() => {
+                    setViewingVersion({
+                      version_id: draft?.version_id || 1,
+                      content_text: draft?.content_text || "",
+                      isCurrentWorkspaceDiff: true
+                    });
+                    setDiffMode("redline");
+                  }}
+                  disabled={loadingDraft || isSaving}
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  View Diff
+                </Button>
+              </TooltipWrapper>
+
               <Button
                   size="sm"
                   className="h-8 gap-1 bg-indigo-600 hover:bg-indigo-700 text-white"
@@ -889,22 +934,51 @@ export default function DraftingDesk({
                     {versions.map((v: any) => (
                       <div
                         key={v.id}
-                        onClick={() => setViewingVersion(v)}
-                        className={`border rounded-lg p-3 bg-card shadow-sm cursor-pointer hover:border-indigo-300 dark:hover:border-indigo-800 transition-colors ${
+                        onClick={() => {
+                          setViewingVersion(v);
+                          setDiffMode("redline");
+                        }}
+                        className={`border rounded-lg p-3 bg-card shadow-sm cursor-pointer hover:border-indigo-300 dark:hover:border-indigo-800 transition-colors flex flex-col gap-1.5 ${
                           viewingVersion?.id === v.id ? "border-indigo-500 ring-1 ring-indigo-500" : "border-border"
                         }`}
                       >
-                        <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center justify-between">
                           <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
                             Version {v.version_id}
                           </span>
-                          <span className="text-[10px] text-muted-foreground">
+                          <span className="text-[10px] text-muted-foreground font-mono">
                             {new Date(v.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </span>
                         </div>
-                        <p className="text-[11px] text-muted-foreground truncate">
+                        <p className="text-[11px] text-muted-foreground truncate leading-relaxed">
                           {v.content_text ? v.content_text.substring(0, 80) : "No text"}...
                         </p>
+                        <div className="flex justify-end gap-1 mt-0.5">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="h-6 text-[10px] px-2 font-semibold hover:bg-indigo-50 dark:hover:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400 border-indigo-100 dark:border-indigo-950"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setViewingVersion(v);
+                              setDiffMode("redline");
+                            }}
+                          >
+                            View Diff
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            className="h-6 text-[10px] px-2 text-muted-foreground font-medium"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setViewingVersion(v);
+                              setDiffMode("full");
+                            }}
+                          >
+                            Full Text
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -922,8 +996,16 @@ export default function DraftingDesk({
           <div className="w-full sm:w-[500px] h-full bg-background border-l border-border shadow-2xl flex flex-col animate-in slide-in-from-right duration-200">
             <div className="p-4 border-b border-border bg-slate-50 dark:bg-slate-900/50 flex items-center justify-between">
               <div>
-                <h3 className="font-bold text-sm">Historical Snapshot Viewer</h3>
-                <p className="text-xs text-muted-foreground">Viewing Version {viewingVersion.version_id}</p>
+                <h3 className="font-bold text-sm">
+                  {viewingVersion.isCurrentWorkspaceDiff ? "Workspace Diff Viewer" : "Historical Snapshot Viewer"}
+                </h3>
+                <p className="text-xs text-muted-foreground">
+                  {viewingVersion.isCurrentWorkspaceDiff 
+                    ? `Comparing current editor text against Version ${viewingVersion.version_id}` 
+                    : diffMode === "redline"
+                      ? `Showing differences introduced in Version ${viewingVersion.version_id} (vs. Version ${viewingVersion.version_id - 1})`
+                      : `Full text of Version ${viewingVersion.version_id}`}
+                </p>
               </div>
               <Button variant="ghost" size="icon" onClick={() => setViewingVersion(null)}>
                 <X className="w-5 h-5" />
