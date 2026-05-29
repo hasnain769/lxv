@@ -123,15 +123,17 @@ const ModuleLibrary = () => {
     }
   });
 
-  const displayModules: Module[] = realModules?.map((rs: any) => ({
-    id: rs.id,
-    title: rs.name,
-    description: rs.description || "No description provided.",
-    difficulty: "Intermediate",
-    scenarios: 1, // Treating it as 1 scenario per module since they ARE the scenarios
-    tags: ["General"],
-    duration: "1 hour",
-  })) || [];
+  const displayModules: Module[] = realModules
+    ?.filter((rs: any) => rs.status === "Active")
+    ?.map((rs: any) => ({
+      id: rs.id,
+      title: rs.name,
+      description: rs.description || "No description provided.",
+      difficulty: "Intermediate",
+      scenarios: 1, // Treating it as 1 scenario per module since they ARE the scenarios
+      tags: ["General"],
+      duration: "1 hour",
+    })) || [];
   return (
     <div className="min-h-screen bg-background">
       <Sidebar />

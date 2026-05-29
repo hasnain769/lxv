@@ -28,7 +28,7 @@ const ScenarioDetail = () => {
       });
       if (!res.ok) throw new Error("Failed to fetch scenarios");
       const data = await res.json();
-      const match = data.scenarios.find((s: { id: string; name: string; description?: string }) => s.id === scenarioId);
+      const match = data.scenarios.find((s: { id: string; name: string; description?: string; status?: string }) => s.id === scenarioId && s.status === "Active");
       if (!match) throw new Error("Scenario not found");
       return {
         ...match,

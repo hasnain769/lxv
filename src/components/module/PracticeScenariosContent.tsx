@@ -69,16 +69,18 @@ export function PracticeScenariosContent() {
     );
   }
 
-  const displayScenarios = realScenarios?.map((rs: { id: string; name: string; description?: string; created_at: string }, idx: number) => {
-    return {
-      id: rs.id,
-      title: rs.name,
-      description: rs.description || "No description provided.",
-      difficulty: "Intermediate", // Fallback if backend doesn't provide
-      duration: "45 min", // Fallback
-      status: "not-started"
-    };
-  }) || [];
+  const displayScenarios = realScenarios
+    ?.filter((rs: any) => rs.status === "Active")
+    ?.map((rs: { id: string; name: string; description?: string; created_at: string }, idx: number) => {
+      return {
+        id: rs.id,
+        title: rs.name,
+        description: rs.description || "No description provided.",
+        difficulty: "Intermediate", // Fallback if backend doesn't provide
+        duration: "45 min", // Fallback
+        status: "not-started"
+      };
+    }) || [];
 
   if (displayScenarios.length === 0) {
     return (

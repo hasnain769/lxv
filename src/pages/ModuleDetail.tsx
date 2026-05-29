@@ -81,7 +81,7 @@ const ModuleDetail = () => {
       });
       if (!res.ok) throw new Error(`Failed to fetch scenarios: ${res.status}`);
       const data = await res.json();
-      const match = data.scenarios.find((s: any) => s.id === id);
+      const match = data.scenarios.find((s: any) => s.id === id && s.status === "Active");
       if (!match) throw new Error("Module not found");
       return match;
     },
