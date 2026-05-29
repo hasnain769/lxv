@@ -156,6 +156,17 @@ export default function DraftingDesk({
     enabled: !!chatId && !!activeDoc,
   });
 
+  // Default diff selectors: Base = most recent committed version, Target = current editor
+  useEffect(() => {
+    if (versions && versions.length > 0) {
+      // versions are returned newest-first or oldest-first — find the max version_id
+      const latest = versions.reduce((max: any, v: any) =>
+        v.version_id > max.version_id ? v : max, versions[0]);
+      setDiffBaseVersionId(latest.version_id);
+      setDiffCompareVersionId("current");
+    }
+  }, [versions]);
+
   // Initialize Tiptap editor
   const editor = useEditor({
     extensions: [
@@ -1223,7 +1234,7 @@ export default function DraftingDesk({
                   {viewingVersion.isCurrentWorkspaceDiff 
                     ? `Comparing current editor text against Version ${viewingVersion.version_id}` 
                     : diffMode === "redline"
-                      ? `Showing differences introduced in Version ${viewingVersion.version_id} (vs. Version ${viewingVersion.version_id - 1})`
+                      ? `Redline: ${diffBaseVersionId === "current" ? "Current Draft" : `V${diffBaseVersionId}`} 2192 ${diffCompareVersionId === "current" ? "Current Draft" : `V${diffCompareVersionId}`}`
                       : `Full text of Version ${viewingVersion.version_id}`}
                 </p>
               </div>
