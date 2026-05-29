@@ -12,7 +12,7 @@ import { TableHeader } from "@tiptap/extension-table-header";
 import { TableCell } from "@tiptap/extension-table-cell";
 import { 
   X, Save, MessageSquare, History, Check, Play, Undo, Redo, Bold, Italic, 
-  List, ListOrdered, FileText, Sparkles, CheckCircle2, ChevronRight, Lock, AlertCircle,
+  List, ListOrdered, FileText, Sparkles, CheckCircle2, ChevronRight, Lock, AlertCircle, Info, AlertTriangle,
   PanelRight, Underline as UnderlineIcon, Strikethrough, Highlighter, AlignLeft, AlignCenter,
   AlignRight, AlignJustify, Table as TableIcon, Heading, Plus, Trash2, ChevronDown
 } from "lucide-react";
@@ -357,8 +357,12 @@ export default function DraftingDesk({
     return (
       <div className="border border-border rounded-lg overflow-hidden bg-slate-50/50 dark:bg-slate-950/20 py-2 divide-y divide-slate-100 dark:divide-slate-900/50">
         {renderedLines.length === 0 ? (
-          <div className="text-center p-8 text-muted-foreground text-xs font-sans">
-            No changes between the selected versions.
+          <div className="text-center p-8 text-muted-foreground text-xs font-sans flex flex-col items-center justify-center gap-2">
+            <Info className="w-8 h-8 opacity-45 text-indigo-500 mb-1" />
+            <p className="font-semibold text-slate-700 dark:text-slate-300">Comparing identical versions</p>
+            <p className="text-[10px] opacity-80 max-w-[250px] mx-auto leading-relaxed">
+              No differences were found. Try changing the "Compare Base" or "Compare Target" selectors above.
+            </p>
           </div>
         ) : (
           renderedLines
@@ -1068,6 +1072,13 @@ export default function DraftingDesk({
                   </select>
                 </div>
               </div>
+
+              {diffBaseVersionId === diffCompareVersionId && (
+                <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-900/30 rounded p-2 text-[10px] text-amber-700 dark:text-amber-400 flex items-start gap-1.5 font-medium leading-normal mt-1 select-none">
+                  <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-amber-500 mt-0.5" />
+                  <span>Base and Target are set to the same version. Change them using the dropdowns above to highlight differences.</span>
+                </div>
+              )}
 
               {/* Diff Mode Toggle Tabs */}
               <div className="flex gap-2 mt-1">
